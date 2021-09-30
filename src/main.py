@@ -1,5 +1,7 @@
 import pygame as pg
 from pygame.locals import *
+from utils import *
+import os
 
 from player import Player
 from grid import Grid
@@ -8,6 +10,9 @@ pg.init()
 clock = pg.time.Clock()
 
 pg.display.set_caption("rat")
+
+#font_name = os.path.join('Assets', '8-BIT WONDER.TTF')
+#MENU_FONT = pg.font.SysFont('comicsans', 100)
 
 SCREEN_WIDTH = 1040
 SCREEN_HEIGHT = 700
@@ -18,6 +23,9 @@ maze = Grid(20, 20, SCREEN_WIDTH, SCREEN_HEIGHT)
 rat = Player(maze)
 
 game_running = True
+
+main_menu(screen)
+
 while(game_running):
     screen.fill((200,200,200))
 
