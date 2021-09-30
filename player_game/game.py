@@ -1,14 +1,18 @@
 import pygame
 from pygame.locals import *
 from random import randint
+import os, sys
+from utils import *
+
+sys.path.append(os.path.abspath(os.path.join('..')))
 
 pygame.init()
 font = pygame.font.SysFont('arial', 25)
 
-rat_up = pygame.image.load("../assets/spr_rat_up.png")
-rat_down = pygame.image.load("../assets/spr_rat_down.png")
-rat_left = pygame.image.load("../assets/spr_rat_left.png")
-rat_right = pygame.image.load("../assets/spr_rat_right.png")
+rat_up = pygame.image.load(os.path.join("assets","spr_rat_up.png"))
+rat_down = pygame.image.load(os.path.join("assets","spr_rat_down.png"))
+rat_left = pygame.image.load(os.path.join("assets","spr_rat_left.png"))
+rat_right = pygame.image.load(os.path.join("assets","spr_rat_right.png"))
 
 class Rat_Game:
 
@@ -217,6 +221,6 @@ class Grid:
 
 if __name__ == "__main__":
     game = Rat_Game()
-
+    main_menu(game.screen)
     while True:
         game.game_step()

@@ -2,17 +2,17 @@ import pygame as pg
 from pygame.locals import *
 import os
 
-SCREEN_WIDTH = 1040
-SCREEN_HEIGHT = 700
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 500
 pg.init()
-MENU_FONT = pg.font.SysFont('comicsans', 300)
-OPTIONS_FONT = pg.font.SysFont('comicsans', 100)
+MENU_FONT = pg.font.SysFont('comicsans', 140)
+OPTIONS_FONT = pg.font.SysFont('comicsans', 60)
 
-RAT_IMAGE = pg.image.load(os.path.join('Assets', 'spr_rat_right.png'))
+RAT_IMAGE = pg.image.load(os.path.join('assets', 'spr_rat_right.png'))
 
 def draw_text(text, font, color, surface, x, y):
     draw_text = font.render(text, 1, color)
-    if x == 8000:
+    if x == 8000: #Gambiarra para colocar no meio da tela
         x = SCREEN_WIDTH//2 - draw_text.get_width()/2
     if y == 8000:
         y = SCREEN_HEIGHT//2 - draw_text.get_height()/2
@@ -26,12 +26,12 @@ def main_menu(surface):
     while True:
         surface.fill((0,0,0))
         
-        draw_text('MAIZE', MENU_FONT, (255,255,255), surface, 8000, 100)
-        draw_text('PLAY GAME', OPTIONS_FONT, (255,255,255), surface, 8000, 350)
-        draw_text('OPTIONS', OPTIONS_FONT, (255,255,255), surface, 8000, 450)
-        draw_text('CREDITS', OPTIONS_FONT, (255,255,255), surface, 8000, 550)
+        draw_text('MAIZE', MENU_FONT, (255,255,255), surface, 8000, 50)
+        draw_text('PLAY GAME', OPTIONS_FONT, (255,255,255), surface, 8000, 250)
+        draw_text('OPTIONS', OPTIONS_FONT, (255,255,255), surface, 8000, 320)
+        draw_text('CREDITS', OPTIONS_FONT, (255,255,255), surface, 8000, 390)
 
-        surface.blit(RAT_IMAGE, (250, cursor_pos*100 + 350))
+        surface.blit(RAT_IMAGE, (70, cursor_pos*70 + 235))
 
         pg.display.update()
 
