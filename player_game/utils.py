@@ -1,6 +1,8 @@
 import pygame as pg
 from pygame.locals import *
-import os
+import os, sys
+
+sys.path.append(os.path.abspath(os.path.join('..')))
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
