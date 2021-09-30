@@ -1,25 +1,27 @@
 import pygame
 from pygame.locals import *
 from random import randint
-import os, sys
 from utils import *
-
-sys.path.append(os.path.abspath(os.path.join('..')))
 
 pygame.init()
 font = pygame.font.SysFont('arial', 25)
 
-rat_up = pygame.image.load(os.path.join("assets","spr_rat_up.png"))
-rat_down = pygame.image.load(os.path.join("assets","spr_rat_down.png"))
-rat_left = pygame.image.load(os.path.join("assets","spr_rat_left.png"))
-rat_right = pygame.image.load(os.path.join("assets","spr_rat_right.png"))
+rat_up = load_image("spr_rat_up.png")
+rat_down = load_image("spr_rat_down.png")
+rat_left = load_image("spr_rat_left.png")
+rat_right = load_image("spr_rat_right.png")
+
+floor_img = load_image("spr_floor_normal.png", res = (50,50))
+wall_img = load_image("spr_tile_middle.png", res = (50,50))
+goal_img = load_image("spr_floor_goal.png", res = (50,50))
+cheese_img = load_image("spr_cheese.png", res = (50,50))
 
 class Rat_Game:
 
     """
 
     Autor: Moisés Filipe
-    Descrição: Classe principal que contem o estado e comportamento do jogo.
+    Descrição: Classe principal que contem o comportamento do jogo.
     
     """
 
@@ -41,56 +43,43 @@ class Rat_Game:
         self.grid = Grid(self.player, n_cols = 10, n_rows = 10)
 
     def game_step(self):
-
-        """
-
-        Recebe como entrada uma ação e realiza as mudanças de estado necessárias dentro do jogo. Uma vez realizadas tais mudanças, renderiza tudo na em self.screen.
-        A acao deve ser uma lista binaria de forma que seus elementos representem as direções da seguinte maneira:
-
-        [1,0,0,0] -> Cima
-
-        [0,1,0,0] -> Baixo
-
-        [0,0,1,0] -> Esquerda
-
-        [0,0,0,1] -> Direita
-
-        """
         if self.grid.done:
             self.reset() 
 
-        self.screen.fill((200, 200, 200))                                       # Preenche a tela de cinza
-        text = font.render("Score: " + str(self.player.score), True, (0,0,0))   # Salva o score como uma string a ser exibida
+        text = font.render("Score: " + str(self.player.score), True, (0,0,0))   # Salva o score a ser exibido
         self.screen.blit(text, [0, 0])                                          # Renderiza o score no canto superior esquerdo
 
-        # Encerra o jogo quando a janela e fechada
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
             if event.type ==  KEYDOWN:
                 if event.key == K_DOWN:
-                    self.grid.clear_player_position()
-                    self.player.direction = "Down"
-                    self.player.move("Down")
+                    if self.grid.is_valid_position(self.player.x, self.player.y + 1):
+                        self.grid.clear_player_position()
+                        self.player.direction = "Down"
+                        self.player.move("Down")
                 if event.key == K_UP:
-                    self.grid.clear_player_position()
-                    self.player.direction = "Up"
-                    self.player.move("Up")
+                    if self.grid.is_valid_position(self.player.x, self.player.y - 1):
+                        self.grid.clear_player_position()
+                        self.player.direction = "Up"
+                        self.player.move("Up")
                 if event.key == K_LEFT:
-                    self.grid.clear_player_position()
-                    self.player.direction = "Left"
-                    self.player.move("Left")
+                    if self.grid.is_valid_position(self.player.x - 1, self.player.y):
+                        self.grid.clear_player_position()
+                        self.player.direction = "Left"
+                        self.player.move("Left")
                 if event.key == K_RIGHT:
-                    self.grid.clear_player_position()
-                    self.player.direction = "Right"
-                    self.player.move("Right")
+                    if self.grid.is_valid_position(self.player.x + 1, self.player.y):
+                        self.grid.clear_player_position()
+                        self.player.direction = "Right"
+                        self.player.move("Right")
 
         self.grid.update()               # Atualiza o grid com as mudancas realizadas nesse step
-        self.draw_grid(self.screen) # Renderiza o grid em self.screen 
+        self.draw_grid(self.screen)      # Renderiza o grid em self.screen 
 
         pygame.display.update()
-        self.clock.tick(1000)
+        self.clock.tick(60)
 
         return self.grid.done, self.player.score # Retorna os dados importantes desse step
     
@@ -98,24 +87,22 @@ class Rat_Game:
         for x in range(0, self.grid.n_cols):
             for y in range(0, self.grid.n_rows):
                 rect = pygame.Rect(x * self.rect_width,  y * self.rect_height, self.rect_width, self.rect_height)
+                screen.blit(floor_img, rect)
                 if self.grid.grid[x][y] == 1:
                     if self.player.direction == "Up":
-                        self.screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width//2, (y*self.rect_height)-32+self.rect_height//2))
+                        screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width//2, (y*self.rect_height)-32+self.rect_height//2))
                     elif self.player.direction == "Down":
-                        self.screen.blit(rat_down, ((x*self.rect_width) - 32 + self.rect_width//2, (y*self.rect_height)-32+self.rect_height//2))
+                        screen.blit(rat_down, ((x*self.rect_width) - 32 + self.rect_width//2, (y*self.rect_height)-32+self.rect_height//2))
                     elif self.player.direction == "Right":
-                        self.screen.blit(rat_right, ((x*self.rect_width) - 32 + self.rect_width//2, (y*self.rect_height)-32+self.rect_height//2))
+                        screen.blit(rat_right, ((x*self.rect_width) - 32 + self.rect_width//2, (y*self.rect_height)-32+self.rect_height//2))
                     else:
-                        self.screen.blit(rat_left, ((x*self.rect_width) - 32 + self.rect_width//2, (y*self.rect_height)-32+self.rect_height//2))
-
-                    # pygame.draw.circle(screen, pygame.Color("#ab58a8"), [
-                    #                (x*self.rect_width) + self.rect_width//2, (y*self.rect_height)+self.rect_height//2], 10)
+                        screen.blit(rat_left, ((x*self.rect_width) - 32 + self.rect_width//2, (y*self.rect_height)-32+self.rect_height//2))
                 elif self.grid.grid[x][y] == 2:
-                    screen.fill((0, 200, 0), rect)
+                    self.screen.blit(goal_img, rect)
                 elif self.grid.grid[x][y] == 3:
-                    screen.fill((0,200,200), rect)
-
-                pygame.draw.rect(screen, (0, 0, 0), rect, 1)    
+                    self.screen.blit(wall_img, rect)
+                elif self.grid.grid[x][y] == 4:
+                    self.screen.blit(cheese_img, rect)
 
 class Player:
     
@@ -180,7 +167,7 @@ class Grid:
         self.screen_width = screen_width
         self.screen_height = screen_height
 
-        self.done = False        # Variavel que determina se o jogo acabou
+        self.done = False   # Variavel que determina se o jogo acabou
 
         self.grid = [[0]*n_cols for i in range(n_rows)] # Matriz que representa o grid.
         
@@ -194,15 +181,33 @@ class Grid:
             else:
                 self.goal_x = randint(0, n_cols-1)
                 self.goal_y = randint(0, n_rows-1)
+        
+        # Posicoes dos queijos
+        self.cheeses_x = []
+        self.cheeses_y = []
+
+        for i in range(5):
+            cheese_x = randint(0, n_cols-1)
+            cheese_y = randint(0, n_rows-1)
+            while self.grid[cheese_x][cheese_y] != 4:
+                if self.grid[cheese_x][cheese_y] == 0:
+                    self.grid[cheese_x][cheese_y] = 4
+                else:
+                    cheese_x = randint(0, n_cols-1)
+                    cheese_y = randint(0, n_rows-1)
+            self.cheeses_x.append(cheese_x)
+            self.cheeses_y.append(cheese_y)
+
+
+
+
     
     def is_valid_position(self, x, y):
         """Checa se a posicao atual esta populada com um obstaculo ou esta out of bounds"""
-        if x > self.n_cols-1 or y > self.n_rows-1:
+        if (x > self.n_cols-1 or y > self.n_rows-1) or (x < 0 or y < 0):
             return False
-        if x < 0 or y < 0:
-            return False
-        
-        if self.grid[x][y] == 3:
+    
+        elif self.grid[x][y] == 3:
             return False
 
         return True  
@@ -212,8 +217,14 @@ class Grid:
         if self.grid[self.player.x][self.player.y] == 2:   # Se a posicao do jogador eh a mesma do objetivo
             self.player.score += self.player.reward_amount # Some a recompensa ao score
             self.done = True                               # Jogo encerrado
+        elif self.grid[self.player.x][self.player.y] == 4:
+            self.player.score += 1
+            self.clear_player_position()
 
         self.grid[self.player.x][self.player.y] = 1 # Popule a atual posicao do jogador com 1
+
+    def clear_position(self, x, y):
+        self.grid[x][y] = 0
     
     def clear_player_position(self):
         self.grid[self.player.x][self.player.y] = 0

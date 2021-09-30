@@ -10,7 +10,7 @@ pg.init()
 MENU_FONT = pg.font.SysFont('comicsans', 140)
 OPTIONS_FONT = pg.font.SysFont('comicsans', 60)
 
-RAT_IMAGE = pg.image.load(os.path.join('assets', 'spr_rat_right.png'))
+RAT_IMAGE = pg.image.load(os.path.join(sys.path[-1],'assets', 'spr_rat_right.png'))
 
 def draw_text(text, font, color, surface, x, y):
     draw_text = font.render(text, 1, color)
@@ -68,3 +68,9 @@ def credits_menu(surface):
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     return 0
+
+def load_image(img_name, path = os.path.join(sys.path[-1],"assets"), res = None):
+    if res:
+        return pg.transform.scale(pg.image.load(os.path.join(path, img_name)), res)
+    else:
+        return pg.image.load(os.path.join(path, img_name))
