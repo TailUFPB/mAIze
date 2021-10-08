@@ -40,6 +40,7 @@ def main_menu(surface):
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
+                quit()
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_DOWN and cursor_pos < 2:
                     cursor_pos += 1
