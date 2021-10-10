@@ -317,6 +317,10 @@ class Grid:
 
 if __name__ == "__main__":
     game = Rat_Game()
-    main_menu(game.screen)
-    while True:
-        game.game_step()
+    mode_selection = main_menu(game.screen)
+    
+    if mode_selection == 0: #Maze maker
+        pass
+    elif mode_selection == 1: #Player vs AI
+        while True:
+            game.game_step()

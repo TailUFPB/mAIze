@@ -2,15 +2,16 @@ import pygame as pg
 from pygame.locals import *
 import os, sys
 
-sys.path.append(os.path.abspath(os.path.join('..')))
+#sys.path.append(os.path.abspath(os.path.join('..')))
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
 pg.init()
 MENU_FONT = pg.font.SysFont('comicsans', 140)
 OPTIONS_FONT = pg.font.SysFont('comicsans', 60)
+SELECT_FONT = pg.font.SysFont('comicsans', 80)
 
-RAT_IMAGE = pg.image.load(os.path.join(sys.path[-1],'assets', 'spr_rat_right.png'))
+RAT_IMAGE = pg.image.load(os.path.join(os.getcwd(),'assets', 'spr_rat_right.png'))
 
 def draw_text(text, font, color, surface, x, y):
     draw_text = font.render(text, 1, color)
@@ -48,7 +49,10 @@ def main_menu(surface):
                     cursor_pos -= 1
                 if event.key == pg.K_RETURN:
                     if cursor_pos == 0:
-                        return 0
+                        game_mode = mode_select(surface)
+                        if game_mode >= 0:
+                            return game_mode
+
                     if cursor_pos == 2:
                         credits_menu(surface)
     
@@ -70,7 +74,34 @@ def credits_menu(surface):
                 if event.key == pg.K_ESCAPE:
                     return 0
 
-def load_image(img_name, path = os.path.join(sys.path[-1],"assets"), res = None):
+def mode_select(surface):
+    
+    cursor_pos = 0
+
+    while True:
+        surface.fill((0,0,0))
+
+        surface.blit(RAT_IMAGE, (25, cursor_pos*130 + 140))
+        
+        draw_text('Maze maker', SELECT_FONT, (255,255,255), surface, 8000, 150)
+        draw_text('Player vs AI', SELECT_FONT, (255,255,255), surface, 8000, 280)
+
+        pg.display.update()
+
+        for event in pg.event.get():
+            if event.type == QUIT:
+                pg.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    return -1
+                if event.key == pg.K_RETURN:
+                    return cursor_pos
+                if event.key == pg.K_DOWN and cursor_pos < 1:
+                    cursor_pos += 1
+                if event.key == pg.K_UP and cursor_pos > 0:
+                    cursor_pos -= 1
+
+def load_image(img_name, path = os.path.join(os.getcwd(),"assets"), res = None):
     if res:
         return pg.transform.scale(pg.image.load(os.path.join(path, img_name)), res)
     else:
