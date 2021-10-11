@@ -4,7 +4,7 @@ import os, sys
 
 #sys.path.append(os.path.abspath(os.path.join('..')))
 
-SCREEN_WIDTH = 500
+SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 500
 pg.init()
 MENU_FONT = pg.font.SysFont('comicsans', 140)
@@ -34,7 +34,7 @@ def main_menu(surface):
         draw_text('OPTIONS', OPTIONS_FONT, (255,255,255), surface, 8000, 320)
         draw_text('CREDITS', OPTIONS_FONT, (255,255,255), surface, 8000, 390)
 
-        surface.blit(RAT_IMAGE, (70, cursor_pos*70 + 235))
+        surface.blit(RAT_IMAGE, (320, cursor_pos*70 + 235))
 
         pg.display.update()
 
@@ -81,7 +81,7 @@ def mode_select(surface):
     while True:
         surface.fill((0,0,0))
 
-        surface.blit(RAT_IMAGE, (25, cursor_pos*130 + 140))
+        surface.blit(RAT_IMAGE, (270, cursor_pos*130 + 140))
         
         draw_text('Maze maker', SELECT_FONT, (255,255,255), surface, 8000, 150)
         draw_text('Player vs AI', SELECT_FONT, (255,255,255), surface, 8000, 280)

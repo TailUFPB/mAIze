@@ -25,7 +25,7 @@ cheese_img = load_image("spr_cheese.png", res=(50, 50))
 
 class Rat_Game:
 
-    def __init__(self, w=500, h=500):
+    def __init__(self, w=1000, h=500):
         self.width = w
         self.height = h
 
@@ -37,16 +37,19 @@ class Rat_Game:
         self.reset()  # inicializa o jogador e o grid
 
         # Dimensoes de cada celula do grid na tela
-        self.rect_width = self.width//self.grid.n_cols
+        self.rect_width = 500//self.grid.n_cols
         self.rect_height = self.height//self.grid.n_rows
 
     def reset(self):
-        self.player = Player(1,1)
-        self.agent = Player(0, 0)
-        self.grid = Grid(self.player, self.agent, n_cols=10, n_rows=10)
+        self.player = Player(1,1, "Player")
+        self.agent = Player(0, 0, "Agent")
+        self.grid = Grid(self.player, n_cols=10, n_rows=10)
+        self.grid_ai = Grid(self.agent, n_cols=10, n_rows=10)
 
     def game_step(self):
         if self.grid.done:
+            self.reset()
+        if self.grid_ai.done:
             self.reset()
 
         text = font.render("Score: " + str(self.player.score),
@@ -63,23 +66,23 @@ class Rat_Game:
                 # Movimento do Agente
                 agent_move = choice(["Up", "Down", "Left", "Right"])
                 if agent_move == "Up":
-                    if self.grid.is_valid_position(self.agent.x, self.agent.y - 1):
-                        self.grid.clear_position(self.agent.x, self.agent.y)
+                    if self.grid_ai.is_valid_position(self.agent.x, self.agent.y - 1):
+                        self.grid_ai.clear_position(self.agent.x, self.agent.y)
                         self.agent.direction = "Up"
                         self.agent.move("Up")
                 if agent_move == "Down":
-                    if self.grid.is_valid_position(self.agent.x, self.agent.y + 1):
-                        self.grid.clear_position(self.agent.x, self.agent.y)
+                    if self.grid_ai.is_valid_position(self.agent.x, self.agent.y + 1):
+                        self.grid_ai.clear_position(self.agent.x, self.agent.y)
                         self.agent.direction = "Down"
                         self.agent.move("Down")
                 if agent_move == "Left":
-                    if self.grid.is_valid_position(self.agent.x - 1, self.agent.y):
-                        self.grid.clear_position(self.agent.x, self.agent.y)
+                    if self.grid_ai.is_valid_position(self.agent.x - 1, self.agent.y):
+                        self.grid_ai.clear_position(self.agent.x, self.agent.y)
                         self.agent.direction = "Left"
                         self.agent.move("Left")
                 if agent_move == "Right":
-                    if self.grid.is_valid_position(self.agent.x + 1, self.agent.y):
-                        self.grid.clear_position(self.agent.x, self.agent.y)
+                    if self.grid_ai.is_valid_position(self.agent.x + 1, self.agent.y):
+                        self.grid_ai.clear_position(self.agent.x, self.agent.y)
                         self.agent.direction = "Right"
                         self.agent.move("Right")
 
@@ -105,7 +108,8 @@ class Rat_Game:
                         self.player.direction = "Right"
                         self.player.move("Right")
 
-        self.grid.update()               # Atualiza o grid com as mudancas realizadas nesse step
+        self.grid.update()
+        self.grid_ai.update()            # Atualiza o grid com as mudancas realizadas nesse step
         self.draw_grid(self.screen)      # Renderiza o grid em self.screen
 
         pygame.display.update()
@@ -115,28 +119,29 @@ class Rat_Game:
         return self.grid.done, self.player.score
 
     def draw_grid(self, screen):
+
         for x in range(0, self.grid.n_cols):
             for y in range(0, self.grid.n_rows):
                 # Posicao
                 rect = pygame.Rect(
-                    x * self.rect_width,  y * self.rect_height, self.rect_width, self.rect_height)
+                    x * self.rect_width + 502,  y * self.rect_height, self.rect_width, self.rect_height)
                 
                 # Chao
                 screen.blit(floor_img, rect)
-
+                
                 # Jogador
                 if self.grid.grid[x][y] == 1:
                     if self.player.direction == "Up":
-                        screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
+                        screen.blit(human_rat_up, ((x*self.rect_width + 502) - 32 + self.rect_width //
                                              2, (y*self.rect_height)-32+self.rect_height//2))
                     elif self.player.direction == "Down":
-                        screen.blit(rat_down, ((x*self.rect_width) - 32 + self.rect_width //
+                        screen.blit(human_rat_down, ((x*self.rect_width + 502) - 32 + self.rect_width //
                                                2, (y*self.rect_height)-32+self.rect_height//2))
                     elif self.player.direction == "Right":
-                        screen.blit(rat_right, ((x*self.rect_width) - 32 + self.rect_width //
+                        screen.blit(human_rat_right, ((x*self.rect_width + 502) - 32 + self.rect_width //
                                                 2, (y*self.rect_height)-32+self.rect_height//2))
                     else:
-                        screen.blit(rat_left, ((x*self.rect_width) - 32 + self.rect_width //
+                        screen.blit(human_rat_left, ((x*self.rect_width + 502) - 32 + self.rect_width //
                                                2, (y*self.rect_height)-32+self.rect_height//2))
 
                 # Objetivo
@@ -149,26 +154,49 @@ class Rat_Game:
                 # Queijo
                 elif self.grid.grid[x][y] == 4:
                     self.screen.blit(cheese_img, rect)
-
+            
+        for x in range(0, self.grid_ai.n_cols):
+            for y in range(0, self.grid_ai.n_rows):
+                # Posicao
+                rect = pygame.Rect(
+                    x * self.rect_width,  y * self.rect_height, self.rect_width, self.rect_height)
+                
+                # Chao
+                screen.blit(floor_img, rect)
+                
                 # Agente
-                elif self.grid.grid[x][y] == 10:
+                if self.grid_ai.grid[x][y] == 10:
                     if self.agent.direction == "Up":
-                        screen.blit(human_rat_up, ((x*self.rect_width) - 32 + self.rect_width //
+                        screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
                                              2, (y*self.rect_height)-32+self.rect_height//2))
                     elif self.agent.direction == "Down":
-                        screen.blit(human_rat_down, ((x*self.rect_width) - 32 + self.rect_width //
+                        screen.blit(rat_down, ((x*self.rect_width) - 32 + self.rect_width //
                                                2, (y*self.rect_height)-32+self.rect_height//2))
                     elif self.agent.direction == "Right":
-                        screen.blit(human_rat_right, ((x*self.rect_width) - 32 + self.rect_width //
+                        screen.blit(rat_right, ((x*self.rect_width) - 32 + self.rect_width //
                                                 2, (y*self.rect_height)-32+self.rect_height//2))
                     else:
-                        screen.blit(human_rat_left, ((x*self.rect_width) - 32 + self.rect_width //
+                        screen.blit(rat_left, ((x*self.rect_width) - 32 + self.rect_width //
                                                2, (y*self.rect_height)-32+self.rect_height//2))
+
+                # Objetivo
+                elif self.grid_ai.grid[x][y] == 2:
+                    self.screen.blit(goal_img, rect)
+                
+                # Parede
+                elif self.grid_ai.grid[x][y] == 3:
+                    self.screen.blit(wall_img, rect)
+                # Queijo
+                elif self.grid_ai.grid[x][y] == 4:
+                    self.screen.blit(cheese_img, rect)
+
+        pygame.draw.rect(screen, (255,0,0), pygame.Rect(self.width//2 - 4, 0, 8, self.height))
 
 class Player:
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, name):
         # Atual posicao no grid
+        self.name = name
         self.x = x
         self.y = y
 
@@ -217,10 +245,9 @@ class Grid:
 
     """
 
-    def __init__(self, player, agent, n_rows=10, n_cols=10, screen_width=500, screen_height=500):
+    def __init__(self, player, n_rows=10, n_cols=10, screen_width=1000, screen_height=500):
 
         self.player = player
-        self.agent = agent
 
         # Dimensoes do grid
         self.n_cols = n_cols
@@ -290,23 +317,17 @@ class Grid:
             self.player.score += self.player.reward_amount  
             self.done = True                                
         
-        elif self.grid[self.agent.x][self.agent.y] == 2:
-            self.agent.score += self.agent.reward_amount
-            self.done = True
-        
         # Checa se o jogador ou agente comeram o queijo
         elif self.grid[self.player.x][self.player.y] == 4:
             self.player.score += 1
             self.clear_position(self.player.x, self.player.y)
-        
-        elif self.grid[self.agent.x][self.agent.y] == 4:
-            self.agent.score += 1
-            self.clear_position(self.agent.x, self.agent.y)
 
 
         # Popule a atual posicao do jogador com 1 e a do agente com 10
-        self.grid[self.player.x][self.player.y] = 1
-        self.grid[self.agent.x][self.agent.y] = 10
+        if self.player.name == "Player":
+            self.grid[self.player.x][self.player.y] = 1
+        elif self.player.name == "Agent":
+            self.grid[self.player.x][self.player.y] = 10
 
     def clear_position(self, x, y):
         self.grid[x][y] = 0
