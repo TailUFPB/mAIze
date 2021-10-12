@@ -1,6 +1,6 @@
 import pygame as pg
 from pygame.locals import *
-import os, sys
+import os
 
 #sys.path.append(os.path.abspath(os.path.join('..')))
 
@@ -11,7 +11,7 @@ MENU_FONT = pg.font.SysFont('comicsans', 140)
 OPTIONS_FONT = pg.font.SysFont('comicsans', 60)
 SELECT_FONT = pg.font.SysFont('comicsans', 80)
 
-RAT_IMAGE = pg.image.load(os.path.join(os.getcwd(),'assets', 'spr_rat_right.png'))
+RAT_IMAGE = pg.image.load(os.path.join(os.path.dirname(os.getcwd()),'assets', 'spr_rat_right.png'))
 
 def draw_text(text, font, color, surface, x, y):
     draw_text = font.render(text, 1, color)
@@ -101,7 +101,7 @@ def mode_select(surface):
                 if event.key == pg.K_UP and cursor_pos > 0:
                     cursor_pos -= 1
 
-def load_image(img_name, path = os.path.join(os.getcwd(),"assets"), res = None):
+def load_image(img_name, path = os.path.join(os.path.dirname(os.getcwd()),"assets"), res = None):
     if res:
         return pg.transform.scale(pg.image.load(os.path.join(path, img_name)), res)
     else:
