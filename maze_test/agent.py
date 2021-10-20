@@ -9,11 +9,11 @@ import pickle
 from teste_2 import MAZE_SIZE
 
 EPISODES = 10000
-RENDER_EPISODE = 10000
-EPSILON_MINIMUM = 0.01
-DECAY = 25
-LEARNING_RATE_MINIMUM = 0.1
-DISCOUNT = 1
+RENDER_EPISODE = 200
+EPSILON_MINIMUM = 0.001
+DECAY = np.prod(MAZE_SIZE, dtype=float) / 2
+LEARNING_RATE_MINIMUM = 0.2
+DISCOUNT = 0.99
 
 class Maze_agent:
 
@@ -77,13 +77,13 @@ class Maze_agent:
             
             rewards = 0
             
-            # moves = 0
+            moves = 0
 
             while not done:
 
                 if episode % RENDER_EPISODE == 0:
                     self.save_model("model/model.pickle")
-                    #self.env.render()
+                    self.env.render()
                     time.sleep(0.01)
 
                 action = self.decide_action(current_state)
@@ -96,10 +96,10 @@ class Maze_agent:
                 current_state = next_state
                 rewards += reward
 
-                # moves += 1
+                moves += 1
             
-                # if moves >= 500:
-                #     done = True
+                if moves >= 2000:
+                    done = True
             
             self.epsilon = self.update_epsilon(episode)
             self.learning_rate = self.update_learning_rate(episode)
