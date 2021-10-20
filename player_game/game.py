@@ -89,9 +89,11 @@ class Rat_Game:
 
     def maze_maker(self):
 
-        maze = [[0]*self.grid.n_cols for i in range(self.grid.n_rows)]
+        maze = [[0]*self.grid_ai.n_cols for i in range(self.grid_ai.n_rows)]
+        rat_flag = 0
+        enter_flag = 0
 
-        while True:
+        while not enter_flag:
             self.screen.fill((100,100,100))
             for event in pygame.event.get():
                 mouse_pos = pygame.mouse.get_pos()
@@ -105,8 +107,20 @@ class Rat_Game:
                     if event.key == K_ESCAPE:
                         self.save_maze(maze)
                         return 0
+
+                    if event.key == K_RETURN:
+                        enter_flag = 1
                     
+                    if event.key == K_r and rat_flag == 0 and mouse_pos[0] < self.width//2:
+                        maze[mouse_x][mouse_y] = 10
+                        self.agent.x = mouse_x
+                        self.agent.y = mouse_y
+                        rat_flag = 1
+
                     if event.key == K_DELETE and mouse_pos[0] < self.width//2:
+                        if maze[mouse_x][mouse_y] == 10:
+                            rat_flag = 0
+
                         maze[mouse_x][mouse_y] = 0
 
 
@@ -116,12 +130,16 @@ class Rat_Game:
                 elif pygame.mouse.get_pressed()[2] and mouse_pos[0] < self.width//2:
                     maze[mouse_x][mouse_y] = 4
 
-            for x in range(0, self.grid.n_cols):
-                for y in range(0, self.grid.n_rows):
+            for x in range(0, self.grid_ai.n_cols):
+                for y in range(0, self.grid_ai.n_rows):
                     rect = pygame.Rect(
                         x * self.rect_width,  y * self.rect_height, self.rect_width, self.rect_height)
 
                     self.screen.blit(floor_img, rect)
+                    
+                    if maze[x][y] == 10:
+                        self.screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
+                                             2, (y*self.rect_height)-32+self.rect_height//2))
 
                     if maze[x][y] == 2:
                         self.screen.blit(goal_img, rect)
@@ -134,13 +152,45 @@ class Rat_Game:
 
             draw_text("Right Mouse to place Cheese", font, (0,0,0), self.screen, 550, 50)
             draw_text("Left Mouse to place Wall", font, (0,0,0), self.screen, 550, 150)
-            draw_text("Delete to remove cell content", font, (0,0,0), self.screen, 550, 250)
-            draw_text("Esc to save maze and quit", font, (0,0,0), self.screen, 550, 350)
+            draw_text("R to place Rattatail", font, (0,0,0), self.screen, 550, 250)
+            draw_text("Delete to remove cell content", font, (0,0,0), self.screen, 550, 350)
+            draw_text("Enter to make Ratattail play the game", font, (0,0,0), self.screen, 550, 450)
+            draw_text("Esc to save maze and quit", font, (0,0,0), self.screen, 550, 550)
 
             pygame.display.update()
     
+        self.grid_ai.grid = maze
+
+        while True:
+            
+            if self.grid_ai.done:
+                self.reset()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                if event.type == KEYDOWN:
+                    
+                    if event.key == K_RETURN:
+                        agent_move = choice(["Up", "Down", "Left", "Right"])
+                        self.agent.move(agent_move, self.grid_ai)
+
+            # Atualiza o grid com as mudancas realizadas nesse step
+            self.grid_ai.update()
+            self.draw_grid(self.screen)      # Renderiza o grid em self.screen
+            pygame.draw.rect(self.screen, (100,100,100), pygame.Rect(498, 0, 502, 500))
+
+            self.clock.tick(60)
+
+            # Retorna os dados importantes desse step
+            #return self.grid_ai.done, self.player.score
+
+            pygame.display.update()
+
+            
     def save_maze(self, maze):
-        f = open(os.path.join("maps", f"map_{randint(1,10000)}.txt"), "w+")
+        f = open(os.path.join(os.getcwd(),"player_game","maps", f"map_{randint(1,10000)}.txt"), "w+")
         for x in range(len(maze)):
             for y in range(len(maze[0])):
                 f.write(f"{maze[x][y]}")
@@ -232,7 +282,7 @@ class Player:
         self.x = x
         self.y = y
 
-        self.direction = "Right"
+        self.direction = "Up"
 
         self.reward_amount = 20
 
