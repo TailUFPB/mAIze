@@ -113,7 +113,7 @@ class Rat_Game(gym.Env):
         current_x = self.agent.x
         current_y = self.agent.y
 
-        while self.maze.grid.is_valid_position(self.maze.grid[current_x, current_y]):
+        for i in range(2):
             if self.agent.direction == "Up":
                 current_x -= 1
                 state.append(self.maze.grid[current_x, current_y])
@@ -130,7 +130,7 @@ class Rat_Game(gym.Env):
                 current_y -= 1
                 state.append(self.maze.grid[current_x, current_y])
 
-        return (self.agent.x, self.agent.y)
+        return (self.agent.x, self.agent.y, state)
 
     def _take_action(self, action):
         self.agent.got_cheese = False
@@ -157,7 +157,7 @@ class Maze_agent:
         self.maze_size = tuple([10,10])
         self.state_bounds = list(zip([0,0], [10,10]))
         self.number_actions = 4
-        self.Q = np.zeros(self.maze_size + (self.number_actions, ), dtype=float)
+        self.Q = np.zeros(self.maze_size + (4, 4) + (self.number_actions, ), dtype=float)
         self.epsilon = 1
         self.learning_rate = 1
         self.decay = DECAY
@@ -167,16 +167,7 @@ class Maze_agent:
         
 
     def discretize_state(self, state) -> tuple:
-        discretazed_state = []
-        for i in range(len(state)):
-            if state[i] <= self.state_bounds[i][0]:
-                new_state = 0
-            elif state[i] >= self.state_bounds[i][1]:
-                new_state = (10,10)[i] - 1
-            else:
-                new_state = int(round(state[i]))
-            discretazed_state.append(new_state)
-        return tuple(discretazed_state)
+        return tuple(state)
 
     def decide_action(self, state) -> int:
         
@@ -188,6 +179,10 @@ class Maze_agent:
         return action
     
     def update_q(self, current_state, action, reward, next_state):
+        print("current:",current_state)
+        print("next:",next_state)
+        print("action:", action)
+        print("sum",tuple(current_state) + (action,))
         
         self.Q[tuple(current_state) + (action,)] = self.Q[tuple(current_state) + (action,)] + self.learning_rate * (reward + self.discount * np.max(self.Q[tuple(next_state)]) - self.Q[tuple(current_state) + (action,)])
         
@@ -206,7 +201,7 @@ class Maze_agent:
     def train(self):
         for episode in range(EPISODES):
             current_state = self.env._reset()
-            #current_state = self.discretize_state(current_state)
+            current_state = self.discretize_state(current_state)
 
             done = False
             
