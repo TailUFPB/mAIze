@@ -5,6 +5,11 @@ from player import Player
 from grid import Grid
 from utils import load_image
 from time import sleep
+import numpy as np
+import math
+import pickle
+import time
+import plot
 
 pygame.init()
 font = pygame.font.SysFont('arial', 25)
@@ -35,8 +40,6 @@ class Rat_Game(gym.Env):
         self.clock = pygame.time.Clock()
 
     def step(self, action):
-        if self.maze.done or self.curr_step >= 50:
-            self._reset()
 
         self.curr_step += 1
         self._take_action(action)
@@ -44,14 +47,16 @@ class Rat_Game(gym.Env):
 
         reward = self._get_reward()
         ob = self._get_state()
-        return ob, reward, self.agent.got_cheese
+        return ob, reward, self.maze.done
 
     def _reset(self):
         self.agent = Player(0, 0, "Agent")
         self.maze = Grid(self.agent, n_cols=10, n_rows=10)
-        
+
         self.iteration += 1
         self.curr_step = 0
+
+        return (0,0)
 
     def _render(self, mode='human', close=False):
         rect_width = 500//10
@@ -91,25 +96,165 @@ class Rat_Game(gym.Env):
                         self.screen.blit(
                             human_rat_left, rect)
 
-        self.clock.tick(10)
+        self.clock.tick(1000)
         pygame.display.update()
 
     def _get_state(self):
-        return self.maze.grid
+        # [0 , 0 , 0,  0]
+        # [0 , 0 , 0,  0]
+        # [0 , ^ , 0 , 0]
+        # [0 , 0 , 0,  0]
+
+        # (2, 1) -> (1,1) + (0,1) -> [0,0]
+        
+        # Retornar linha reta
+        state = []
+
+        current_x = self.agent.x
+        current_y = self.agent.y
+
+        while self.maze.grid.is_valid_position(self.maze.grid[current_x, current_y]):
+            if self.agent.direction == "Up":
+                current_x -= 1
+                state.append(self.maze.grid[current_x, current_y])
+
+            if self.agent.direction == "Down":
+                current_x += 1
+                state.append(self.maze.grid[current_x, current_y])
+
+            if self.agent.direction == "Right":
+                current_y += 1
+                state.append(self.maze.grid[current_x, current_y])
+                
+            if self.agent.direction == "Left":
+                current_y -= 1
+                state.append(self.maze.grid[current_x, current_y])
+
+        return (self.agent.x, self.agent.y)
 
     def _take_action(self, action):
         self.agent.got_cheese = False
-        self.agent.move(action, self.maze)
+        directions = ["Up", "Down", "Left", "Right"]
+        self.agent.move(directions[action], self.maze)
 
     def _get_reward(self):
-        return self.agent.got_cheese
+        if self.maze.done:
+            return 5
+        else:
+            return 0
+
+EPISODES = 10000
+RENDER_EPISODE = 200
+EPSILON_MINIMUM = 0.001
+DECAY = np.prod((10,10), dtype=float) / 2
+LEARNING_RATE_MINIMUM = 0.2
+DISCOUNT = 0.99
+
+class Maze_agent:
+
+    def __init__(self):
+        self.env = Rat_Game()
+        self.maze_size = tuple([10,10])
+        self.state_bounds = list(zip([0,0], [10,10]))
+        self.number_actions = 4
+        self.Q = np.zeros(self.maze_size + (self.number_actions, ), dtype=float)
+        self.epsilon = 1
+        self.learning_rate = 1
+        self.decay = DECAY
+        self.discount = DISCOUNT
+        self.all_rewards = []
+        self.mean_rewards = []
+        
+
+    def discretize_state(self, state) -> tuple:
+        discretazed_state = []
+        for i in range(len(state)):
+            if state[i] <= self.state_bounds[i][0]:
+                new_state = 0
+            elif state[i] >= self.state_bounds[i][1]:
+                new_state = (10,10)[i] - 1
+            else:
+                new_state = int(round(state[i]))
+            discretazed_state.append(new_state)
+        return tuple(discretazed_state)
+
+    def decide_action(self, state) -> int:
+        
+        if np.random.random() < self.epsilon:
+            action = choice(list(range(4))) #self.env.action_space.sample()
+        else:
+            action = int(np.argmax(self.Q[state]))
+            
+        return action
+    
+    def update_q(self, current_state, action, reward, next_state):
+        
+        self.Q[tuple(current_state) + (action,)] = self.Q[tuple(current_state) + (action,)] + self.learning_rate * (reward + self.discount * np.max(self.Q[tuple(next_state)]) - self.Q[tuple(current_state) + (action,)])
+        
+    def update_learning_rate(self, episode) -> float:
+        learning_rate = min(1, 1 - math.log10((episode + 1) / DECAY))
+        learning_rate = max(learning_rate, LEARNING_RATE_MINIMUM)
+        
+        return learning_rate
+    
+    def update_epsilon(self, episode) -> float:
+        epsilon = min(1, 1 - math.log10((episode + 1) / DECAY))
+        epsilon = max(epsilon, EPSILON_MINIMUM)
+
+        return epsilon
+    
+    def train(self):
+        for episode in range(EPISODES):
+            current_state = self.env._reset()
+            #current_state = self.discretize_state(current_state)
+
+            done = False
+            
+            rewards = 0
+            
+            moves = 0
+
+            while not done:
+
+                if episode % RENDER_EPISODE == 0:
+                    #self.save_model("model/model.pickle")
+                    self.env._render()
+                    time.sleep(0.01)
+
+                action = self.decide_action(current_state)
+
+                next_state, reward, done = self.env.step(action)
+                next_state = self.discretize_state(next_state)
+
+                self.update_q(current_state, action, reward, next_state)
+
+                current_state = next_state
+                rewards += reward
+
+                moves += 1
+            
+                if moves >= 1000:
+                    done = True
+            
+            self.epsilon = self.update_epsilon(episode)
+            self.learning_rate = self.update_learning_rate(episode)
+
+            self.all_rewards.append(rewards)
+            mean_reward = (sum(self.all_rewards) / (episode + 1))
+            self.mean_rewards.append(mean_reward)
+            plot.plot(self.all_rewards, self.mean_rewards, self.epsilon)
+        
+        self.env.close()
+
+    def save_model(self, path):
+        with open(path, 'wb') as model:
+            pickle.dump(self.Q, model)
+    
+    def load_model(self, path) -> pickle:
+        with open(path, 'rb') as model:
+           return pickle.load(model)
 
 
 if __name__ == "__main__":
-    env = Rat_Game()
-
-    while True:
-        env.step(choice(["Right", "Up", "Left", "Down"]))
-        if env.iteration % 200 == 0:
-            env._render()
-            sleep(0.01)
+    agent = Maze_agent()
+    agent.train()
