@@ -10,6 +10,8 @@ class Player:
 
         self.reward_amount = 20
 
+        self.eaten_cheese = False
+
         self.score = 0
 
     def move(self, direction, grid):

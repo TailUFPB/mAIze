@@ -94,7 +94,7 @@ class Rat_Game:
         enter_flag = 0
 
         while not enter_flag:
-            self.screen.fill((100,100,100))
+            self.screen.fill((100, 100, 100))
             for event in pygame.event.get():
                 mouse_pos = pygame.mouse.get_pos()
                 mouse_x, mouse_y = mouse_pos[0]//self.rect_width, mouse_pos[1]//self.rect_height
@@ -102,7 +102,7 @@ class Rat_Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
-            
+
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
                         self.save_maze(maze)
@@ -110,7 +110,7 @@ class Rat_Game:
 
                     if event.key == K_RETURN:
                         enter_flag = 1
-                    
+
                     if event.key == K_r and rat_flag == 0 and mouse_pos[0] < self.width//2:
                         maze[mouse_x][mouse_y] = 10
                         self.agent.x = mouse_x
@@ -122,7 +122,6 @@ class Rat_Game:
                             rat_flag = 0
 
                         maze[mouse_x][mouse_y] = 0
-
 
                 if pygame.mouse.get_pressed()[0] and mouse_pos[0] < self.width//2:
                     maze[mouse_x][mouse_y] = 3
@@ -136,10 +135,10 @@ class Rat_Game:
                         x * self.rect_width,  y * self.rect_height, self.rect_width, self.rect_height)
 
                     self.screen.blit(floor_img, rect)
-                    
+
                     if maze[x][y] == 10:
                         self.screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
-                                             2, (y*self.rect_height)-32+self.rect_height//2))
+                                                  2, (y*self.rect_height)-32+self.rect_height//2))
 
                     if maze[x][y] == 2:
                         self.screen.blit(goal_img, rect)
@@ -150,19 +149,25 @@ class Rat_Game:
                     elif maze[x][y] == 4:
                         self.screen.blit(cheese_img, rect)
 
-            draw_text("Right Mouse to place Cheese", font, (0,0,0), self.screen, 550, 50)
-            draw_text("Left Mouse to place Wall", font, (0,0,0), self.screen, 550, 150)
-            draw_text("R to place Rattatail", font, (0,0,0), self.screen, 550, 250)
-            draw_text("Delete to remove cell content", font, (0,0,0), self.screen, 550, 350)
-            draw_text("Enter to make Ratattail play the game", font, (0,0,0), self.screen, 550, 450)
-            draw_text("Esc to save maze and quit", font, (0,0,0), self.screen, 550, 550)
+            draw_text("Right Mouse to place Cheese", font,
+                      (0, 0, 0), self.screen, 550, 50)
+            draw_text("Left Mouse to place Wall", font,
+                      (0, 0, 0), self.screen, 550, 150)
+            draw_text("R to place Rattatail", font,
+                      (0, 0, 0), self.screen, 550, 250)
+            draw_text("Delete to remove cell content", font,
+                      (0, 0, 0), self.screen, 550, 350)
+            draw_text("Enter to make Ratattail play the game",
+                      font, (0, 0, 0), self.screen, 550, 450)
+            draw_text("Esc to save maze and quit", font,
+                      (0, 0, 0), self.screen, 550, 550)
 
             pygame.display.update()
-    
+
         self.grid_ai.grid = maze
 
         while True:
-            
+
             if self.grid_ai.done:
                 self.reset()
 
@@ -171,7 +176,7 @@ class Rat_Game:
                     pygame.quit()
                     quit()
                 if event.type == KEYDOWN:
-                    
+
                     if event.key == K_RETURN:
                         agent_move = choice(["Up", "Down", "Left", "Right"])
                         self.agent.move(agent_move, self.grid_ai)
@@ -179,25 +184,26 @@ class Rat_Game:
             # Atualiza o grid com as mudancas realizadas nesse step
             self.grid_ai.update()
             self.draw_grid(self.screen)      # Renderiza o grid em self.screen
-            pygame.draw.rect(self.screen, (100,100,100), pygame.Rect(498, 0, 502, 500))
+            pygame.draw.rect(self.screen, (100, 100, 100),
+                             pygame.Rect(498, 0, 502, 500))
 
             self.clock.tick(60)
 
             # Retorna os dados importantes desse step
-            #return self.grid_ai.done, self.player.score
+            # return self.grid_ai.done, self.player.score
 
             pygame.display.update()
 
-            
     def save_maze(self, maze):
-        f = open(os.path.join(os.getcwd(),"player_game","maps", f"map_{randint(1,10000)}.txt"), "w+")
+        f = open(os.path.join(os.getcwd(), "player_game",
+                              "maps", f"map_{randint(1,10000)}.txt"), "w+")
         for x in range(len(maze)):
             for y in range(len(maze[0])):
                 f.write(f"{maze[x][y]}")
             if x != len(maze)-1:
                 f.write("\n")
         f.close()
-        
+
     def draw_grid(self, screen):
 
         for x in range(0, self.grid.n_cols):
@@ -284,7 +290,7 @@ class Player:
 
         self.direction = "Up"
 
-        self.reward_amount = 20
+        self.reward_amount = 1
 
         self.score = 0
 
@@ -410,7 +416,7 @@ class Grid:
 
         # Checa se o jogador ou agente comeram o queijo
         elif self.grid[self.player.x][self.player.y] == 4:
-            self.player.score += 1
+            #self.player.score += 1
             self.clear_position(self.player.x, self.player.y)
 
         # Popule a atual posicao do jogador com 1 e a do agente com 10
@@ -424,6 +430,7 @@ class Grid:
 
     def clear_player_position(self):
         self.grid[self.player.x][self.player.y] = 0
+
 
 if __name__ == "__main__":
     game = Rat_Game()

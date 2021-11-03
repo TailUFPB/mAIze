@@ -40,20 +40,20 @@ class Grid:
 
         self.done = False   # Variavel que determina se o jogo acabou
 
-        self.grid = array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 3, 3, 3, 0, 3, 3, 3, 0, 0],
-                           [0, 0, 3, 0, 0, 3, 0, 3, 0, 0],
-                           [0, 0, 3, 0, 0, 3, 3, 3, 0, 0],
-                           [0, 0, 3, 0, 0, 3, 0, 3, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
-                           [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
-                           [0, 0, 3, 0, 0, 0, 3, 3, 0, 0]]).T
+        self.grid = array([[0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
+                           [3, 3, 3, 0, 3, 3, 3, 3, 3, 0],
+                           [0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+                           [0, 3, 0, 3, 3, 0, 3, 0, 0, 0],
+                           [0, 3, 0, 0, 0, 0, 3, 3, 0, 0],
+                           [0, 3, 0, 0, 3, 3, 0, 0, 3, 0],
+                           [0, 3, 3, 4, 4, 0, 0, 0, 3, 0],
+                           [0, 0, 0, 3, 3, 0, 3, 0, 3, 0],
+                           [0, 3, 0, 0, 0, 0, 3, 0, 4, 0],
+                           [4, 3, 3, 0, 4, 0, 3, 0, 0, 3]]).T
 
         # Posicao do objetivo
-        self.goal_x = randint(0, n_cols-1)
-        self.goal_y = randint(0, n_rows-1)
+        self.goal_x = 5 #randint(0, n_cols-1)
+        self.goal_y = 0 #randint(0, n_rows-1)
 
         while self.grid[self.goal_x][self.goal_y] != 2:
             if self.grid[self.goal_x][self.goal_y] == 0:
@@ -63,11 +63,10 @@ class Grid:
                 self.goal_x = randint(0, n_cols-1)
                 self.goal_y = randint(0, n_rows-1)
 
-        # Posicoes dos queijos
-        self.cheeses_x = []
-        self.cheeses_y = []
+        self.cheeses_x = [0,4,5,7,3]
+        self.cheeses_y = [9,4,4,9,9]
 
-        for i in range(5):
+        '''for i in range(5):
             cheese_x = randint(0, n_cols-1)
             cheese_y = randint(0, n_rows-1)
             while self.grid[cheese_x][cheese_y] != 4:
@@ -77,7 +76,23 @@ class Grid:
                     cheese_x = randint(0, n_cols-1)
                     cheese_y = randint(0, n_rows-1)
             self.cheeses_x.append(cheese_x)
-            self.cheeses_y.append(cheese_y)
+            self.cheeses_y.append(cheese_y)'''
+
+        # Posicoes dos queijos
+        # self.cheeses_x = []
+        # self.cheeses_y = []
+
+        # for i in range(5):
+        #     cheese_x = randint(0, n_cols-1)
+        #     cheese_y = randint(0, n_rows-1)
+        #     while self.grid[cheese_x][cheese_y] != 4:
+        #         if self.grid[cheese_x][cheese_y] == 0:
+        #             self.grid[cheese_x][cheese_y] = 4
+        #         else:
+        #             cheese_x = randint(0, n_cols-1)
+        #             cheese_y = randint(0, n_rows-1)
+        #     self.cheeses_x.append(cheese_x)
+        #     self.cheeses_y.append(cheese_y)
 
     def is_valid_position(self, x, y):
         """Checa se a posicao atual esta populada com um obstaculo ou esta out of bounds"""
@@ -91,7 +106,7 @@ class Grid:
 
     def update(self):
         """Atualiza o grid com as mudancas de estado realizadas."""
-
+        self.player.eaten_cheese = False
         # Checa se o jogador ou agente chegaram no objetivo
         if self.grid[self.player.x][self.player.y] == 2:
             self.player.score += self.player.reward_amount
@@ -99,7 +114,8 @@ class Grid:
 
         # Checa se o jogador ou agente comeram o queijo
         elif self.grid[self.player.x][self.player.y] == 4:
-            self.player.score += 1
+            self.player.score += 0.2
+            self.player.eaten_cheese = True
             self.clear_position(self.player.x, self.player.y)
 
         # Popule a atual posicao do jogador com 1 e a do agente com 10

@@ -113,22 +113,22 @@ class Rat_Game(gym.Env):
         current_x = self.agent.x
         current_y = self.agent.y
 
-        while self.maze.grid.is_valid_position(self.maze.grid[current_x, current_y]):
-            if self.agent.direction == "Up":
-                current_x -= 1
-                state.append(self.maze.grid[current_x, current_y])
+        # while self.maze.grid.is_valid_position(current_x, current_y):
+        #     if self.agent.direction == "Up":
+        #         current_x -= 1
+        #         state.append(self.maze.grid[current_x, current_y])
 
-            if self.agent.direction == "Down":
-                current_x += 1
-                state.append(self.maze.grid[current_x, current_y])
+        #     if self.agent.direction == "Down":
+        #         current_x += 1
+        #         state.append(self.maze.grid[current_x, current_y])
 
-            if self.agent.direction == "Right":
-                current_y += 1
-                state.append(self.maze.grid[current_x, current_y])
+        #     if self.agent.direction == "Right":
+        #         current_y += 1
+        #         state.append(self.maze.grid[current_x, current_y])
                 
-            if self.agent.direction == "Left":
-                current_y -= 1
-                state.append(self.maze.grid[current_x, current_y])
+        #     if self.agent.direction == "Left":
+        #         current_y -= 1
+        #         state.append(self.maze.grid[current_x, current_y])
 
         return (self.agent.x, self.agent.y)
 
@@ -138,10 +138,17 @@ class Rat_Game(gym.Env):
         self.agent.move(directions[action], self.maze)
 
     def _get_reward(self):
+        reward = -0.01
+
         if self.maze.done:
-            return 5
-        else:
-            return 0
+            reward += 1
+        
+        elif self.agent.eaten_cheese:
+            reward += 0.2
+        
+        return reward
+        
+
 
 EPISODES = 10000
 RENDER_EPISODE = 200
@@ -210,7 +217,7 @@ class Maze_agent:
 
             done = False
             
-            rewards = 0
+            rewards = 1
             
             moves = 0
 
