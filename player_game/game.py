@@ -44,6 +44,8 @@ class Rat_Game:
     def reset(self):
         self.player = Player(1, 1, "Player")
         self.agent = Player(0, 0, "Agent")
+        self.player.initial_x, self.player.initial_y = 0, 0
+        self.agent.initial_x, self.agent.initial_y = 0, 0
         self.grid = Grid(self.player, n_cols=10, n_rows=10)
         self.grid_ai = Grid(self.agent, n_cols=10, n_rows=10)
 
@@ -62,6 +64,9 @@ class Rat_Game:
 
                 # Movimento do Agente
                 agent_move = choice(["Up", "Down", "Left", "Right"])
+
+                self.grid_ai.trap_hole = not self.grid_ai.trap_hole
+                self.grid.trap_hole = not self.grid.trap_hole
 
                 # Movimento do Jogador
                 if event.key == K_DOWN:
@@ -123,11 +128,16 @@ class Rat_Game:
                     if event.key == K_DELETE and mouse_pos[0] < self.width//2:
                         if maze[mouse_x][mouse_y] == 10:
                             rat_flag = 0
+                        elif maze[mouse_x][mouse_y] == 5:
+                            self.grid_ai.holes_x.remove(mouse_x)
+                            self.grid_ai.holes_y.remove(mouse_y)
 
                         maze[mouse_x][mouse_y] = 0
 
                     if event.key == K_t and mouse_pos[0] < self.width//2:
                         maze[mouse_x][mouse_y] = 5
+                        self.grid_ai.holes_x.append(mouse_x)
+                        self.grid_ai.holes_y.append(mouse_y)
 
                 if pygame.mouse.get_pressed()[0] and mouse_pos[0] < self.width//2:
                     maze[mouse_x][mouse_y] = 3
@@ -185,7 +195,7 @@ class Rat_Game:
                     pygame.quit()
                     quit()
                 if event.type == KEYDOWN:
-                    self.grid_ai.flame_active = not self.grid_ai.flame_active
+                    self.grid_ai.trap_hole = not self.grid_ai.trap_hole
 
                     if event.key == K_RETURN:
                         agent_move = choice(["Up", "Down", "Left", "Right"])
@@ -251,6 +261,12 @@ class Rat_Game:
                 elif self.grid.grid[x][y] == 4:
                     self.screen.blit(cheese_img, rect)
 
+                elif self.grid.grid[x][y] == 5:
+                    if self.grid.trap_hole:
+                        self.screen.blit(human_rat_down, rect)
+                    else:
+                        self.screen.blit(human_rat_up, rect)
+
 
         for x in range(0, self.grid_ai.n_cols):
             for y in range(0, self.grid_ai.n_rows):
@@ -289,7 +305,7 @@ class Rat_Game:
 
                 # Armadilha 1
                 elif self.grid_ai.grid[x][y] == 5:
-                    if self.grid_ai.flame_active:
+                    if self.grid_ai.trap_hole:
                         self.screen.blit(human_rat_down, rect)
                     else:
                         self.screen.blit(human_rat_up, rect)
@@ -372,7 +388,7 @@ class Grid:
         self.n_cols = n_cols
         self.n_rows = n_rows
 
-        self.flame_active = True
+        self.trap_hole = True
 
         # Dimensoes da tela, importante para renderizar o grid.
         self.screen_width = screen_width
@@ -389,7 +405,7 @@ class Grid:
                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                            [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
                            [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
-                           [0, 0, 3, 0, 0, 0, 3, 3, 0, 0]]).T
+                           [0, 0, 3, 0, 5, 5, 3, 3, 0, 0]]).T
 
         # Posicao do objetivo
         self.goal_x = randint(0, n_cols-1)
@@ -406,6 +422,15 @@ class Grid:
         # Posicoes dos queijos
         self.cheeses_x = []
         self.cheeses_y = []
+
+        self.holes_x = []
+        self.holes_y = []
+
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                if self.grid[i][j] == 5:
+                    self.holes_x.append(i)
+                    self.holes_y.append(j)
 
         for i in range(5):
             cheese_x = randint(0, n_cols-1)
@@ -432,6 +457,10 @@ class Grid:
     def update(self):
         """Atualiza o grid com as mudancas de estado realizadas."""
 
+        for i in range(len(self.holes_x)):
+            if self.grid[self.holes_x[i]][self.holes_y[i]] != 1:
+                self.grid[self.holes_x[i]][self.holes_y[i]] = 5
+
         # Checa se o jogador ou agente chegaram no objetivo
         if self.grid[self.player.x][self.player.y] == 2:
             self.player.score += self.player.reward_amount
@@ -442,7 +471,7 @@ class Grid:
             #self.player.score += 1
             self.clear_position(self.player.x, self.player.y)
 
-        elif self.grid[self.player.x][self.player.y] == 5 and self.flame_active == True:
+        elif self.grid[self.player.x][self.player.y] == 5 and self.trap_hole == True:
             self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
 
         # Popule a atual posicao do jogador com 1 e a do agente com 10
