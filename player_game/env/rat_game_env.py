@@ -1,3 +1,4 @@
+from os import stat
 from random import choice
 import gym
 import pygame
@@ -56,7 +57,7 @@ class Rat_Game(gym.Env):
         self.iteration += 1
         self.curr_step = 0
 
-        return (0,0)
+        return self._get_state()
 
     def _render(self, mode='human', close=False):
         rect_width = 500//10
@@ -113,26 +114,51 @@ class Rat_Game(gym.Env):
         current_x = self.agent.x
         current_y = self.agent.y
 
-        # while self.maze.grid.is_valid_position(current_x, current_y):
-        #     if self.agent.direction == "Up":
-        #         current_x -= 1
-        #         state.append(self.maze.grid[current_x, current_y])
+        j = 0
 
-        #     if self.agent.direction == "Down":
-        #         current_x += 1
-        #         state.append(self.maze.grid[current_x, current_y])
+        while self.maze.is_valid_position(current_x, current_y) and j < 4:
+            if self.agent.direction == "Up":
+                current_x -= 1
 
-        #     if self.agent.direction == "Right":
-        #         current_y += 1
-        #         state.append(self.maze.grid[current_x, current_y])
+                if self.maze.is_valid_position(current_x,current_y):
+                    state.append(self.maze.grid[current_x, current_y])
+                else:
+                    state.append(3)
+
+            if self.agent.direction == "Down":
+                current_x += 1
+                if self.maze.is_valid_position(current_x,current_y):
+                    state.append(self.maze.grid[current_x, current_y])
+                else:
+                    state.append(3)
+
+            if self.agent.direction == "Right":
+                current_y += 1
+                if self.maze.is_valid_position(current_x,current_y):
+                    state.append(self.maze.grid[current_x, current_y])
+                else:
+                    state.append(3)
                 
-        #     if self.agent.direction == "Left":
-        #         current_y -= 1
-        #         state.append(self.maze.grid[current_x, current_y])
+            if self.agent.direction == "Left":
+                current_y -= 1
+                if self.maze.is_valid_position(current_x,current_y):
+                    state.append(self.maze.grid[current_x, current_y])
+                else:
+                    state.append(3)
+        j += 1
+        
+        while len(state) < 4:
+            state.append(3)
+        
+        while len(state) > 4:
+            state.pop()
+        
+        print(state)
 
-        return (self.agent.x, self.agent.y)
+        return state#(self.agent.x, self.agent.y)
 
     def _take_action(self, action):
+        print(action)
         self.agent.got_cheese = False
         directions = ["Up", "Down", "Left", "Right"]
         self.agent.move(directions[action], self.maze)
@@ -141,10 +167,10 @@ class Rat_Game(gym.Env):
         reward = -0.01
 
         if self.maze.done:
-            reward += 1
+            reward += 5
         
         elif self.agent.eaten_cheese:
-            reward += 0.2
+            reward += 1
         
         return reward
         
@@ -164,7 +190,7 @@ class Maze_agent:
         self.maze_size = tuple([10,10])
         self.state_bounds = list(zip([0,0], [10,10]))
         self.number_actions = 4
-        self.Q = np.zeros(self.maze_size + (self.number_actions, ), dtype=float)
+        self.Q = np.zeros((5, 5, 5, 5) + (self.number_actions, ), dtype=float) # FIX #ERRO NO Q
         self.epsilon = 1
         self.learning_rate = 1
         self.decay = DECAY
@@ -173,28 +199,20 @@ class Maze_agent:
         self.mean_rewards = []
         
 
-    def discretize_state(self, state) -> tuple:
-        discretazed_state = []
-        for i in range(len(state)):
-            if state[i] <= self.state_bounds[i][0]:
-                new_state = 0
-            elif state[i] >= self.state_bounds[i][1]:
-                new_state = (10,10)[i] - 1
-            else:
-                new_state = int(round(state[i]))
-            discretazed_state.append(new_state)
-        return tuple(discretazed_state)
+    def discretize_state(self, state) -> tuple: # FIX
+        return tuple(state)
 
     def decide_action(self, state) -> int:
         
         if np.random.random() < self.epsilon:
             action = choice(list(range(4))) #self.env.action_space.sample()
         else:
+            print(self.Q[state])
             action = int(np.argmax(self.Q[state]))
             
         return action
     
-    def update_q(self, current_state, action, reward, next_state):
+    def update_q(self, current_state, action, reward, next_state): # FIX
         
         self.Q[tuple(current_state) + (action,)] = self.Q[tuple(current_state) + (action,)] + self.learning_rate * (reward + self.discount * np.max(self.Q[tuple(next_state)]) - self.Q[tuple(current_state) + (action,)])
         
