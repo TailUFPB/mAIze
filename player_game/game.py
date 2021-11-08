@@ -52,6 +52,7 @@ class Rat_Game:
             self.reset()
         if self.grid_ai.done:
             self.reset()
+        
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -115,6 +116,8 @@ class Rat_Game:
                         maze[mouse_x][mouse_y] = 10
                         self.agent.x = mouse_x
                         self.agent.y = mouse_y
+                        self.agent.initial_x = mouse_x
+                        self.agent.initial_y = mouse_y
                         rat_flag = 1
 
                     if event.key == K_DELETE and mouse_pos[0] < self.width//2:
@@ -122,6 +125,9 @@ class Rat_Game:
                             rat_flag = 0
 
                         maze[mouse_x][mouse_y] = 0
+
+                    if event.key == K_t and mouse_pos[0] < self.width//2:
+                        maze[mouse_x][mouse_y] = 5
 
                 if pygame.mouse.get_pressed()[0] and mouse_pos[0] < self.width//2:
                     maze[mouse_x][mouse_y] = 3
@@ -148,6 +154,9 @@ class Rat_Game:
 
                     elif maze[x][y] == 4:
                         self.screen.blit(cheese_img, rect)
+
+                    elif maze[x][y] == 5:
+                        self.screen.blit(human_rat_down, rect)
 
             draw_text("Right Mouse to place Cheese", font,
                       (0, 0, 0), self.screen, 550, 50)
@@ -176,6 +185,7 @@ class Rat_Game:
                     pygame.quit()
                     quit()
                 if event.type == KEYDOWN:
+                    self.grid_ai.flame_active = not self.grid_ai.flame_active
 
                     if event.key == K_RETURN:
                         agent_move = choice(["Up", "Down", "Left", "Right"])
@@ -241,6 +251,7 @@ class Rat_Game:
                 elif self.grid.grid[x][y] == 4:
                     self.screen.blit(cheese_img, rect)
 
+
         for x in range(0, self.grid_ai.n_cols):
             for y in range(0, self.grid_ai.n_rows):
                 # Posicao
@@ -276,6 +287,13 @@ class Rat_Game:
                 elif self.grid_ai.grid[x][y] == 4:
                     self.screen.blit(cheese_img, rect)
 
+                # Armadilha 1
+                elif self.grid_ai.grid[x][y] == 5:
+                    if self.grid_ai.flame_active:
+                        self.screen.blit(human_rat_down, rect)
+                    else:
+                        self.screen.blit(human_rat_up, rect)
+
         pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(
             self.width//2 - 4, 0, 8, self.height))
 
@@ -287,6 +305,9 @@ class Player:
         self.name = name
         self.x = x
         self.y = y
+
+        self.initial_x = 0
+        self.initial_y = 0
 
         self.direction = "Up"
 
@@ -350,6 +371,8 @@ class Grid:
         # Dimensoes do grid
         self.n_cols = n_cols
         self.n_rows = n_rows
+
+        self.flame_active = True
 
         # Dimensoes da tela, importante para renderizar o grid.
         self.screen_width = screen_width
@@ -418,6 +441,9 @@ class Grid:
         elif self.grid[self.player.x][self.player.y] == 4:
             #self.player.score += 1
             self.clear_position(self.player.x, self.player.y)
+
+        elif self.grid[self.player.x][self.player.y] == 5 and self.flame_active == True:
+            self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
 
         # Popule a atual posicao do jogador com 1 e a do agente com 10
         if self.player.name == "Player":
