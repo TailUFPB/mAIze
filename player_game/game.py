@@ -22,7 +22,9 @@ floor_img = load_image("spr_floor_normal.png", res=(50, 50))
 wall_img = load_image("spr_tile_middle.png", res=(50, 50))
 goal_img = load_image("spr_floor_goal.png", res=(50, 50))
 cheese_img = load_image("spr_cheese.png", res=(50, 50))
-
+fire_img = load_image("spr_fire.png", res=(50,50))
+trap_closed_img = load_image("spr_floor_trap.png", res=(50,50))
+trap_open_img = load_image("spr_floor_trap_open.png", res=(50,50))
 
 class Rat_Game:
 
@@ -166,7 +168,7 @@ class Rat_Game:
                         self.screen.blit(cheese_img, rect)
 
                     elif maze[x][y] == 5:
-                        self.screen.blit(human_rat_down, rect)
+                        self.screen.blit(trap_closed_img, rect)
 
             draw_text("Right Mouse to place Cheese", font,
                       (0, 0, 0), self.screen, 550, 50)
@@ -263,9 +265,9 @@ class Rat_Game:
 
                 elif self.grid.grid[x][y] == 5:
                     if self.grid.trap_hole:
-                        self.screen.blit(human_rat_down, rect)
+                        self.screen.blit(trap_open_img, rect)
                     else:
-                        self.screen.blit(human_rat_up, rect)
+                        self.screen.blit(trap_closed_img, rect)
 
 
         for x in range(0, self.grid_ai.n_cols):
@@ -306,9 +308,9 @@ class Rat_Game:
                 # Armadilha 1
                 elif self.grid_ai.grid[x][y] == 5:
                     if self.grid_ai.trap_hole:
-                        self.screen.blit(human_rat_down, rect)
+                        self.screen.blit(trap_open_img, rect)
                     else:
-                        self.screen.blit(human_rat_up, rect)
+                        self.screen.blit(trap_closed_img, rect)
 
         pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(
             self.width//2 - 4, 0, 8, self.height))
@@ -405,7 +407,7 @@ class Grid:
                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                            [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
                            [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
-                           [0, 0, 3, 0, 5, 5, 3, 3, 0, 0]]).T
+                           [0, 0, 3, 0, 0, 0, 3, 3, 0, 0]]).T
 
         # Posicao do objetivo
         self.goal_x = randint(0, n_cols-1)
