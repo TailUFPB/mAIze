@@ -13,7 +13,7 @@ RENDER_EPISODE = 200
 EPSILON_MINIMUM = 0.001
 DECAY = np.prod(MAZE_SIZE, dtype=float) / 0.5
 LEARNING_RATE_MINIMUM = 0.2
-DISCOUNT = 0.80
+DISCOUNT = 0.99
 
 class Maze_agent:
 
@@ -22,7 +22,7 @@ class Maze_agent:
         self.maze_size = tuple((self.env.observation_space.high + np.ones(self.env.observation_space.shape)).astype(int))
         self.state_bounds = list(zip(self.env.observation_space.low, self.env.observation_space.high))
         self.number_actions = self.env.action_space.n
-        self.Q = np.zeros(self.maze_size + (self.number_actions, ), dtype=float)
+        self.Q = self.load_model("model/model.pickle")
         self.epsilon = 1
         self.learning_rate = 1
         self.decay = DECAY
@@ -82,9 +82,9 @@ class Maze_agent:
             while not done:
 
                 if episode % RENDER_EPISODE == 0:
-                    self.save_model("model/model.pickle")
+                    #self.save_model("model/model.pickle")
                     self.env.render()
-                    #time.sleep(0.01)
+                    time.sleep(0.01)
 
                 action = self.decide_action(current_state)
 
@@ -102,8 +102,8 @@ class Maze_agent:
                     done = True
             
             if episode >= 100:
-                self.epsilon = self.update_epsilon(episode)
-                self.learning_rate = self.update_learning_rate(episode)
+                self.epsilon = self.update_epsilon(episode - 99)
+                self.learning_rate = self.update_learning_rate(episode - 99)
 
             self.all_rewards.append(rewards)
             mean_reward = (sum(self.all_rewards) / (episode + 1))
