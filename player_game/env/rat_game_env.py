@@ -13,7 +13,7 @@ import time
 import plot
 
 pygame.init()
-font = pygame.font.SysFont('arial', 25)
+font = pygame.font.SysFont("arial", 25)
 
 rat_up = load_image("spr_rat_up.png")
 rat_down = load_image("spr_rat_down.png")
@@ -40,6 +40,8 @@ class Rat_Game(gym.Env):
         pygame.display.set_caption("Rar_Game_Env")
         self.clock = pygame.time.Clock()
 
+        self.reward_ahead = False
+
     def step(self, action):
 
         self.curr_step += 1
@@ -59,15 +61,16 @@ class Rat_Game(gym.Env):
 
         return self._get_state()
 
-    def _render(self, mode='human', close=False):
-        rect_width = 500//10
-        rect_height = 500//10
+    def _render(self, mode="human", close=False):
+        rect_width = 500 // 10
+        rect_height = 500 // 10
 
         for x in range(0, 10):
             for y in range(0, 10):
                 # Posicao
                 rect = pygame.Rect(
-                    x * rect_width,  y * rect_height, rect_width, rect_height)
+                    x * rect_width, y * rect_height, rect_width, rect_height
+                )
 
                 # Chao
                 self.screen.blit(floor_img, rect)
@@ -85,158 +88,178 @@ class Rat_Game(gym.Env):
 
                 if self.maze.grid[x][y] == 10:
                     if self.agent.direction == "Up":
-                        self.screen.blit(
-                            human_rat_up, rect)
+                        self.screen.blit(human_rat_up, rect)
                     elif self.agent.direction == "Down":
-                        self.screen.blit(
-                            human_rat_down, rect)
+                        self.screen.blit(human_rat_down, rect)
                     elif self.agent.direction == "Right":
-                        self.screen.blit(
-                            human_rat_right, rect)
+                        self.screen.blit(human_rat_right, rect)
                     else:
-                        self.screen.blit(
-                            human_rat_left, rect)
+                        self.screen.blit(human_rat_left, rect)
 
         self.clock.tick(1000)
         pygame.display.update()
 
     def _get_state(self):
         # [0 , 0 , 0,  0]
-        # [0 , 0 , 0,  0]
+        # [0 , 3 , 0,  0]
         # [0 , ^ , 0 , 0]
         # [0 , 0 , 0,  0]
 
         # (2, 1) -> (1,1) + (0,1) -> [0,0]
-        
+
         # Retornar linha reta
         state = []
 
         current_x = self.agent.x
         current_y = self.agent.y
+        state.append(current_x)
+        state.append(current_y)
 
-        j = 0
+        vision_range = 0
 
-        while self.maze.is_valid_position(current_x, current_y) and j < 4:
+        while self.maze.is_valid_position(current_x, current_y) and vision_range < 4:
             if self.agent.direction == "Up":
                 current_x -= 1
 
-                if self.maze.is_valid_position(current_x,current_y):
+                if self.maze.is_valid_position(current_x, current_y):
                     state.append(self.maze.grid[current_x, current_y])
                 else:
                     state.append(3)
 
             if self.agent.direction == "Down":
                 current_x += 1
-                if self.maze.is_valid_position(current_x,current_y):
+                if self.maze.is_valid_position(current_x, current_y):
                     state.append(self.maze.grid[current_x, current_y])
                 else:
                     state.append(3)
 
             if self.agent.direction == "Right":
                 current_y += 1
-                if self.maze.is_valid_position(current_x,current_y):
+                if self.maze.is_valid_position(current_x, current_y):
                     state.append(self.maze.grid[current_x, current_y])
                 else:
                     state.append(3)
-                
+
             if self.agent.direction == "Left":
                 current_y -= 1
-                if self.maze.is_valid_position(current_x,current_y):
+                if self.maze.is_valid_position(current_x, current_y):
                     state.append(self.maze.grid[current_x, current_y])
                 else:
                     state.append(3)
-        j += 1
-        
-        while len(state) < 4:
+        vision_range += 1
+
+        while len(state) < vision_range + 2:
             state.append(3)
-        
-        while len(state) > 4:
+
+        while len(state) > vision_range + 2:
             state.pop()
         
-        print(state)
+        for i in range(2, vision_range + 2):
+            if state[i] != 3 and state[i] != 0:
+                self.reward_ahead = True
+                break
 
-        return state#(self.agent.x, self.agent.y)
+        return state  # (self.agent.x, self.agent.y, vision_range[0-4])
 
     def _take_action(self, action):
-        print(action)
+        # print(action)
         self.agent.got_cheese = False
         directions = ["Up", "Down", "Left", "Right"]
         self.agent.move(directions[action], self.maze)
 
     def _get_reward(self):
+        #reward = 1
         reward = -0.01
+
+        if self.reward_ahead:
+            reward += 0.01
+            self.reward_ahead = False
 
         if self.maze.done:
             reward += 5
-        
+
         elif self.agent.eaten_cheese:
             reward += 1
-        
+
         return reward
-        
 
 
 EPISODES = 10000
 RENDER_EPISODE = 200
 EPSILON_MINIMUM = 0.001
-DECAY = np.prod((10,10), dtype=float) / 2
+DECAY = np.prod((10, 10), dtype=float) / 3
 LEARNING_RATE_MINIMUM = 0.2
 DISCOUNT = 0.99
 
-class Maze_agent:
 
+class Maze_agent:
     def __init__(self):
         self.env = Rat_Game()
-        self.maze_size = tuple([10,10])
-        self.state_bounds = list(zip([0,0], [10,10]))
+        self.maze_size = tuple([10, 10])
+        self.state_bounds = list(zip([0, 0], [10, 10]))
         self.number_actions = 4
-        self.Q = np.zeros((5, 5, 5, 5) + (self.number_actions, ), dtype=float) # FIX #ERRO NO Q
+        self.number_blocks = 5
+        self.vision = (
+            self.number_blocks,
+            self.number_blocks,
+            self.number_blocks,
+            self.number_blocks,
+        )
+        self.Q = np.zeros(
+            self.maze_size + self.vision + (self.number_actions,), dtype=float
+        )  # FIX #ERRO NO Q
         self.epsilon = 1
         self.learning_rate = 1
         self.decay = DECAY
         self.discount = DISCOUNT
         self.all_rewards = []
         self.mean_rewards = []
-        
 
-    def discretize_state(self, state) -> tuple: # FIX
+    def discretize_state(self, state) -> tuple:  # FIX
         return tuple(state)
 
     def decide_action(self, state) -> int:
-        
+
         if np.random.random() < self.epsilon:
-            action = choice(list(range(4))) #self.env.action_space.sample()
+            action = choice(list(range(4)))  # self.env.action_space.sample()
         else:
-            print(self.Q[state])
+            # print(f"State: {state}")
+            # print(f"Q[state]: {self.Q[state]}")
             action = int(np.argmax(self.Q[state]))
-            
+
         return action
-    
-    def update_q(self, current_state, action, reward, next_state): # FIX
-        
-        self.Q[tuple(current_state) + (action,)] = self.Q[tuple(current_state) + (action,)] + self.learning_rate * (reward + self.discount * np.max(self.Q[tuple(next_state)]) - self.Q[tuple(current_state) + (action,)])
-        
+
+    def update_q(self, current_state, action, reward, next_state):  # FIX
+
+        self.Q[tuple(current_state) + (action,)] = self.Q[
+            tuple(current_state) + (action,)
+        ] + self.learning_rate * (
+            reward
+            + self.discount * np.max(self.Q[tuple(next_state)])
+            - self.Q[tuple(current_state) + (action,)]
+        )
+
     def update_learning_rate(self, episode) -> float:
         learning_rate = min(1, 1 - math.log10((episode + 1) / DECAY))
         learning_rate = max(learning_rate, LEARNING_RATE_MINIMUM)
-        
+
         return learning_rate
-    
+
     def update_epsilon(self, episode) -> float:
         epsilon = min(1, 1 - math.log10((episode + 1) / DECAY))
         epsilon = max(epsilon, EPSILON_MINIMUM)
 
         return epsilon
-    
+
     def train(self):
         for episode in range(EPISODES):
             current_state = self.env._reset()
-            #current_state = self.discretize_state(current_state)
+            current_state = self.discretize_state(current_state)
 
             done = False
-            
-            rewards = 1
-            
+
+            rewards = 0
+
             moves = 0
 
             while not done:
@@ -244,7 +267,7 @@ class Maze_agent:
                 if episode % RENDER_EPISODE == 0:
                     #self.save_model("model/model.pickle")
                     self.env._render()
-                    time.sleep(0.01)
+                    time.sleep(0.02)
 
                 action = self.decide_action(current_state)
 
@@ -257,27 +280,28 @@ class Maze_agent:
                 rewards += reward
 
                 moves += 1
+
+                #if moves >= 1000:
+                    #done = True
             
-                if moves >= 1000:
-                    done = True
-            
-            self.epsilon = self.update_epsilon(episode)
-            self.learning_rate = self.update_learning_rate(episode)
+            if(episode > 200):
+                self.epsilon = self.update_epsilon(episode - 200)
+                self.learning_rate = self.update_learning_rate(episode - 200)
 
             self.all_rewards.append(rewards)
-            mean_reward = (sum(self.all_rewards) / (episode + 1))
+            mean_reward = sum(self.all_rewards) / (episode + 1)
             self.mean_rewards.append(mean_reward)
             plot.plot(self.all_rewards, self.mean_rewards, self.epsilon)
-        
+
         self.env.close()
 
     def save_model(self, path):
-        with open(path, 'wb') as model:
+        with open(path, "wb") as model:
             pickle.dump(self.Q, model)
-    
+
     def load_model(self, path) -> pickle:
-        with open(path, 'rb') as model:
-           return pickle.load(model)
+        with open(path, "rb") as model:
+            return pickle.load(model)
 
 
 if __name__ == "__main__":
