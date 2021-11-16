@@ -115,51 +115,57 @@ class Rat_Game(gym.Env):
         state.append(current_x)
         state.append(current_y)
 
-        vision_range = 0
-
-        while self.maze.is_valid_position(current_x, current_y) and vision_range < 4:
-            if self.agent.direction == "Up":
-                current_x -= 1
-
-                if self.maze.is_valid_position(current_x, current_y):
-                    state.append(self.maze.grid[current_x, current_y])
-                else:
-                    state.append(3)
-
-            if self.agent.direction == "Down":
-                current_x += 1
-                if self.maze.is_valid_position(current_x, current_y):
-                    state.append(self.maze.grid[current_x, current_y])
-                else:
-                    state.append(3)
-
-            if self.agent.direction == "Right":
-                current_y += 1
-                if self.maze.is_valid_position(current_x, current_y):
-                    state.append(self.maze.grid[current_x, current_y])
-                else:
-                    state.append(3)
-
-            if self.agent.direction == "Left":
-                current_y -= 1
-                if self.maze.is_valid_position(current_x, current_y):
-                    state.append(self.maze.grid[current_x, current_y])
-                else:
-                    state.append(3)
-        vision_range += 1
-
-        while len(state) < vision_range + 2:
+        if self.maze.is_valid_position(current_x + 1, current_y):
+            state.append(self.maze.grid[current_x + 1, current_y])
+        else:
             state.append(3)
 
-        while len(state) > vision_range + 2:
-            state.pop()
+        if self.maze.is_valid_position(current_x - 1, current_y):
+            state.append(self.maze.grid[current_x - 1, current_y])
+        else:
+            state.append(3)
         
-        for i in range(2, vision_range + 2):
-            if state[i] != 3 and state[i] != 0:
-                self.reward_ahead = True
-                break
+        if self.maze.is_valid_position(current_x, current_y + 1):
+            state.append(self.maze.grid[current_x, current_y + 1])
+        else:
+            state.append(3)
+            
+        if self.maze.is_valid_position(current_x, current_y - 1):
+            state.append(self.maze.grid[current_x, current_y - 1])
+        else:
+            state.append(3)
 
-        return state  # (self.agent.x, self.agent.y, vision_range[0-4])
+
+        if self.agent.direction == "Up":
+            current_x -= 2
+
+            if self.maze.is_valid_position(current_x, current_y):
+                state.append(self.maze.grid[current_x, current_y])
+            else:
+                state.append(3)
+
+        if self.agent.direction == "Down":
+            current_x += 2
+            if self.maze.is_valid_position(current_x, current_y):
+                state.append(self.maze.grid[current_x, current_y])
+            else:
+                state.append(3)
+
+        if self.agent.direction == "Right":
+            current_y += 2
+            if self.maze.is_valid_position(current_x, current_y):
+                state.append(self.maze.grid[current_x, current_y])
+            else:
+                state.append(3)
+
+        if self.agent.direction == "Left":
+            current_y -= 2
+            if self.maze.is_valid_position(current_x, current_y):
+                state.append(self.maze.grid[current_x, current_y])
+            else:
+                state.append(3)
+
+        return state  # (self.agent.x, self.agent.y)
 
     def _take_action(self, action):
         # print(action)
@@ -204,6 +210,7 @@ class Maze_agent:
             self.number_blocks,
             self.number_blocks,
             self.number_blocks,
+            self.number_blocks,
         )
         self.Q = np.zeros(
             self.maze_size + self.vision + (self.number_actions,), dtype=float
@@ -223,20 +230,15 @@ class Maze_agent:
         if np.random.random() < self.epsilon:
             action = choice(list(range(4)))  # self.env.action_space.sample()
         else:
-            # print(f"State: {state}")
-            # print(f"Q[state]: {self.Q[state]}")
+            #print(f"State: {state}")
+            #print(f"Q[state]: {self.Q[state]}")
             action = int(np.argmax(self.Q[state]))
 
         return action
 
     def update_q(self, current_state, action, reward, next_state):  # FIX
 
-        self.Q[tuple(current_state) + (action,)] = self.Q[
-            tuple(current_state) + (action,)
-        ] + self.learning_rate * (
-            reward
-            + self.discount * np.max(self.Q[tuple(next_state)])
-            - self.Q[tuple(current_state) + (action,)]
+        self.Q[tuple(current_state) + (action,)] = self.Q[tuple(current_state) + (action,)] + self.learning_rate * (reward+ self.discount * np.max(self.Q[tuple(next_state)])- self.Q[tuple(current_state) + (action,)]
         )
 
     def update_learning_rate(self, episode) -> float:
