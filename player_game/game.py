@@ -87,7 +87,13 @@ class Rat_Game:
         # Atualiza o grid com as mudancas realizadas nesse step
         self.grid.update()
         self.grid_ai.update()
-        self.draw_grid(self.screen)      # Renderiza o grid em self.screen
+        self.screen.fill((0, 0, 0))
+
+        self.draw_vision(self.player, self.grid, self.screen)
+        self.draw_vision(self.agent, self.grid_ai, self.screen)
+
+        pygame.draw.rect(self.screen, (255, 0, 0), pygame.Rect(
+            self.width//2 - 4, 0, 8, self.height))    
 
         pygame.display.update()
         self.clock.tick(60)
@@ -228,47 +234,6 @@ class Rat_Game:
 
     def draw_grid(self, screen):
 
-        for x in range(0, self.grid.n_cols):
-            for y in range(0, self.grid.n_rows):
-                # Posicao
-                rect = pygame.Rect(
-                    x * self.rect_width + 502,  y * self.rect_height, self.rect_width, self.rect_height)
-
-                # Chao
-                screen.blit(floor_img, rect)
-
-                # Jogador
-                if self.grid.grid[x][y] == 1:
-                    if self.player.direction == "Up":
-                        screen.blit(human_rat_up, ((x*self.rect_width + 502) - 32 + self.rect_width //
-                                                   2, (y*self.rect_height)-32+self.rect_height//2))
-                    elif self.player.direction == "Down":
-                        screen.blit(human_rat_down, ((x*self.rect_width + 502) - 32 + self.rect_width //
-                                                     2, (y*self.rect_height)-32+self.rect_height//2))
-                    elif self.player.direction == "Right":
-                        screen.blit(human_rat_right, ((x*self.rect_width + 502) - 32 + self.rect_width //
-                                                      2, (y*self.rect_height)-32+self.rect_height//2))
-                    else:
-                        screen.blit(human_rat_left, ((x*self.rect_width + 502) - 32 + self.rect_width //
-                                                     2, (y*self.rect_height)-32+self.rect_height//2))
-
-                # Objetivo
-                elif self.grid.grid[x][y] == 2:
-                    self.screen.blit(goal_img, rect)
-
-                # Parede
-                elif self.grid.grid[x][y] == 3:
-                    self.screen.blit(wall_img, rect)
-                # Queijo
-                elif self.grid.grid[x][y] == 4:
-                    self.screen.blit(cheese_img, rect)
-
-                elif self.grid.grid[x][y] == 5:
-                    if self.grid.trap_hole:
-                        self.screen.blit(trap_open_img, rect)
-                    else:
-                        self.screen.blit(trap_closed_img, rect)
-
 
         for x in range(0, self.grid_ai.n_cols):
             for y in range(0, self.grid_ai.n_rows):
@@ -294,27 +259,180 @@ class Rat_Game:
                         screen.blit(rat_left, ((x*self.rect_width) - 32 + self.rect_width //
                                                2, (y*self.rect_height)-32+self.rect_height//2))
 
-                # Objetivo
-                elif self.grid_ai.grid[x][y] == 2:
-                    self.screen.blit(goal_img, rect)
+                self.object_draw(self.grid_ai.grid[x][y], self.grid_ai.trap_hole, rect)
 
-                # Parede
-                elif self.grid_ai.grid[x][y] == 3:
-                    self.screen.blit(wall_img, rect)
-                # Queijo
-                elif self.grid_ai.grid[x][y] == 4:
-                    self.screen.blit(cheese_img, rect)
+        #pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(
+        #    self.width//2 - 4, 0, 8, self.height))        
 
-                # Armadilha 1
-                elif self.grid_ai.grid[x][y] == 5:
-                    if self.grid_ai.trap_hole:
-                        self.screen.blit(trap_open_img, rect)
-                    else:
-                        self.screen.blit(trap_closed_img, rect)
+    def draw_vision(self, rat, the_grid, screen):
 
-        pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(
-            self.width//2 - 4, 0, 8, self.height))
+        if rat.name == 'Player':
+            constant = 500
+            rat_vis_up, rat_vis_down, rat_vis_left, rat_vis_right = human_rat_up, human_rat_down, human_rat_left, human_rat_right
+        else:
+            rat_vis_up, rat_vis_down, rat_vis_left, rat_vis_right = rat_up, rat_down, rat_left, rat_right
+            constant = 0
 
+        if rat.direction == "Up":
+
+            rect_left = pygame.Rect(
+                    (rat.x - 1) * self.rect_width + constant,  (rat.y) * self.rect_height, self.rect_width, self.rect_height)
+
+            rect_right = pygame.Rect(
+                    (rat.x + 1) * self.rect_width + constant,  (rat.y) * self.rect_height, self.rect_width, self.rect_height)
+
+            if rat.x > 0:
+                screen.blit(floor_img, rect_left)
+                self.object_draw(the_grid.grid[rat.x - 1][rat.y], the_grid.trap_hole, rect_left)
+
+            if rat.x < 9:
+                screen.blit(floor_img, rect_right)
+                self.object_draw(the_grid.grid[rat.x + 1][rat.y], the_grid.trap_hole, rect_right)
+
+            for i in range(4):
+                if not the_grid.is_valid_position((rat.x),(rat.y - i)):
+                    if the_grid.grid[rat.x][rat.y - i] == 3:
+                        rect2 = pygame.Rect(
+                                (rat.x) * self.rect_width + constant,  (rat.y - i) * self.rect_height, 
+                                self.rect_width, self.rect_height)
+                        self.screen.blit(wall_img, rect2)
+                    break
+
+                rect = pygame.Rect(
+                    (rat.x) * self.rect_width + constant,  (rat.y - i) * self.rect_height, self.rect_width, self.rect_height)
+
+                # Chao
+                screen.blit(floor_img, rect)
+                self.object_draw(the_grid.grid[rat.x][rat.y - i], the_grid.trap_hole, rect)
+
+            screen.blit(rat_vis_up, ((rat.x*self.rect_width + constant) - 30 + self.rect_width //
+                                        2, (rat.y*self.rect_height)-32+self.rect_height//2))
+        
+        elif rat.direction == "Down":
+
+            rect_left = pygame.Rect(
+                    (rat.x - 1) * self.rect_width + constant,  (rat.y) * self.rect_height, self.rect_width, self.rect_height)
+
+            rect_right = pygame.Rect(
+                    (rat.x + 1) * self.rect_width + constant,  (rat.y) * self.rect_height, self.rect_width, self.rect_height)
+
+            if rat.x > 0:
+                screen.blit(floor_img, rect_left)
+                self.object_draw(the_grid.grid[rat.x - 1][rat.y], the_grid.trap_hole, rect_left)
+
+            if rat.x < 9:
+                screen.blit(floor_img, rect_right)
+                self.object_draw(the_grid.grid[rat.x + 1][rat.y], the_grid.trap_hole, rect_right)
+
+            for i in range(4):
+
+                if not the_grid.is_valid_position((rat.x),(rat.y + i)):
+                    if rat.y + i < 10 and the_grid.grid[rat.x][rat.y + i] == 3:
+                        rect2 = pygame.Rect(
+                                (rat.x) * self.rect_width + constant,  (rat.y + i) * self.rect_height, 
+                                self.rect_width, self.rect_height)
+                        self.screen.blit(wall_img, rect2)
+                    break
+                rect = pygame.Rect(
+                    (rat.x) * self.rect_width + constant,  (rat.y + i) * self.rect_height, self.rect_width, self.rect_height)
+
+                # Chao
+                screen.blit(floor_img, rect)
+                self.object_draw(the_grid.grid[rat.x][rat.y + i], the_grid.trap_hole, rect)
+
+            screen.blit(rat_vis_down, ((rat.x*self.rect_width + constant) - 30 + self.rect_width //
+                                            2, (rat.y*self.rect_height)-32+self.rect_height//2))
+        
+        elif rat.direction == "Right":
+
+            rect_up = pygame.Rect(
+                    (rat.x) * self.rect_width + constant,  (rat.y - 1) * self.rect_height, self.rect_width, self.rect_height)
+
+            rect_down = pygame.Rect(
+                    (rat.x) * self.rect_width + constant,  (rat.y + 1) * self.rect_height, self.rect_width, self.rect_height)
+
+            if rat.y > 0:
+                screen.blit(floor_img, rect_up)
+                self.object_draw(the_grid.grid[rat.x][rat.y - 1], the_grid.trap_hole, rect_up)
+
+            if rat.y < 9:
+                screen.blit(floor_img, rect_down)
+                self.object_draw(the_grid.grid[rat.x][rat.y + 1], the_grid.trap_hole, rect_down)
+
+            for i in range(4):
+
+                if not the_grid.is_valid_position((rat.x + i),(rat.y)):
+                    if rat.x + i < 10 and the_grid.grid[rat.x + i][rat.y] == 3:
+                        rect2 = pygame.Rect(
+                                (rat.x + i) * self.rect_width + constant,  (rat.y) * self.rect_height, 
+                                self.rect_width, self.rect_height)
+                        self.screen.blit(wall_img, rect2)
+                    break
+
+                rect = pygame.Rect(
+                    (rat.x + i) * self.rect_width + constant,  (rat.y) * self.rect_height, self.rect_width, self.rect_height)
+
+                # Chao
+                screen.blit(floor_img, rect)
+                self.object_draw(the_grid.grid[rat.x + i][rat.y], the_grid.trap_hole, rect)
+
+            screen.blit(rat_vis_right, ((rat.x*self.rect_width + constant) - 30 + self.rect_width //
+                                            2, (rat.y*self.rect_height)-32+self.rect_height//2))
+        
+        else:
+
+            rect_up = pygame.Rect(
+                    (rat.x) * self.rect_width + constant,  (rat.y - 1) * self.rect_height, self.rect_width, self.rect_height)
+
+            rect_down = pygame.Rect(
+                    (rat.x) * self.rect_width + constant,  (rat.y + 1) * self.rect_height, self.rect_width, self.rect_height)
+
+            if rat.y > 0:
+                screen.blit(floor_img, rect_up)
+                self.object_draw(the_grid.grid[rat.x][rat.y - 1], the_grid.trap_hole, rect_up)
+
+            if rat.y < 9:
+                screen.blit(floor_img, rect_down)
+                self.object_draw(the_grid.grid[rat.x][rat.y + 1], the_grid.trap_hole, rect_down)
+            
+            for i in range(4):
+
+                if not the_grid.is_valid_position((rat.x - i),(rat.y)):
+                    if the_grid.grid[rat.x - i][rat.y] == 3:
+                        rect2 = pygame.Rect(
+                                (rat.x - i) * self.rect_width + constant,  (rat.y) * self.rect_height, 
+                                self.rect_width, self.rect_height)
+                        self.screen.blit(wall_img, rect2)
+                    break
+
+                rect = pygame.Rect(
+                    (rat.x - i) * self.rect_width + constant,  (rat.y) * self.rect_height, self.rect_width, self.rect_height)
+
+                # Chao
+                screen.blit(floor_img, rect)
+                self.object_draw(the_grid.grid[rat.x - i][rat.y], the_grid.trap_hole, rect)
+            
+            screen.blit(rat_vis_left, ((rat.x*self.rect_width + constant) - 30 + self.rect_width //
+                                            2, (rat.y*self.rect_height)-32+self.rect_height//2))
+
+    def object_draw(self, pos, trap_hole, rect):
+        #Objetivo
+        if pos == 2:
+            self.screen.blit(goal_img, rect)
+
+        # Parede
+        elif pos == 3:
+            self.screen.blit(wall_img, rect)
+        # Queijo
+        elif pos == 4:
+            self.screen.blit(cheese_img, rect)
+
+        # Armadilha 1
+        elif pos == 5:
+            if trap_hole:
+                self.screen.blit(trap_open_img, rect)
+            else:
+                self.screen.blit(trap_closed_img, rect)
 
 class Player:
 
