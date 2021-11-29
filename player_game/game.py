@@ -51,6 +51,32 @@ class Rat_Game:
         self.grid = Grid(self.player, n_cols=10, n_rows=10)
         self.grid_ai = Grid(self.agent, n_cols=10, n_rows=10)
 
+    def level_select(self):
+        cursor_pos = 0
+
+        while True:
+            self.screen.fill((0,0,0))
+
+            self.screen.blit(rat_up, (cursor_pos*107 + 40, 330))
+            
+            draw_text('SELECT LEVEL', MENU_FONT, (255,255,255), self.screen, 8000, 30)
+            draw_text('1  2  3  4  5  6  7  8  9', MENU_FONT, (255,255,255), self.screen, 8000, 250)
+
+            pg.display.update()
+
+            for event in pg.event.get():
+                if event.type == QUIT:
+                    pg.quit()
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_RETURN:
+                        self.grid.grid, self.grid_ai.grid = get_grid(cursor_pos)
+                        self.player.x, self.player.y, self.agent.x, self.agent.x = get_pos(cursor_pos)
+                        return 0
+                    if event.key == pg.K_RIGHT and cursor_pos < 8:
+                        cursor_pos += 1
+                    if event.key == pg.K_LEFT and cursor_pos > 0:
+                        cursor_pos -= 1
+
     def game_step(self):
         if self.grid.done:
             self.reset()
@@ -614,5 +640,6 @@ if __name__ == "__main__":
     if mode_selection == 0:    # Maze maker
         game.maze_maker()
     elif mode_selection == 1:  # Player vs AI
+        game.level_select()
         while True:
             game.game_step()
