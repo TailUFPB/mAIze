@@ -71,6 +71,10 @@ class Rat_Game:
                     if event.key == pg.K_RETURN:
                         self.grid.grid, self.grid_ai.grid = get_grid(cursor_pos)
                         self.player.x, self.player.y, self.agent.x, self.agent.x = get_pos(cursor_pos)
+
+                        self.grid.populate_lists()
+                        self.grid_ai.populate_lists()
+
                         return 0
                     if event.key == pg.K_RIGHT and cursor_pos < 8:
                         cursor_pos += 1
@@ -578,18 +582,6 @@ class Grid:
                     self.holes_x.append(i)
                     self.holes_y.append(j)
 
-        for i in range(5):
-            cheese_x = randint(0, n_cols-1)
-            cheese_y = randint(0, n_rows-1)
-            while self.grid[cheese_x][cheese_y] != 4:
-                if self.grid[cheese_x][cheese_y] == 0:
-                    self.grid[cheese_x][cheese_y] = 4
-                else:
-                    cheese_x = randint(0, n_cols-1)
-                    cheese_y = randint(0, n_rows-1)
-            self.cheeses_x.append(cheese_x)
-            self.cheeses_y.append(cheese_y)
-
     def is_valid_position(self, x, y):
         """Checa se a posicao atual esta populada com um obstaculo ou esta out of bounds"""
         if (x > self.n_cols-1 or y > self.n_rows-1) or (x < 0 or y < 0):
@@ -631,6 +623,22 @@ class Grid:
 
     def clear_player_position(self):
         self.grid[self.player.x][self.player.y] = 0
+
+    def populate_lists(self):
+        self.cheeses_x = []
+        self.cheeses_y = []
+
+        self.holes_x = []
+        self.holes_y = []
+
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                if self.grid[i][j] == 5:
+                    self.holes_x.append(i)
+                    self.holes_y.append(j)
+                elif self.grid[i][j] == 4:
+                    self.cheeses_x.append(i)
+                    self.cheeses_y.append(j)
 
 
 if __name__ == "__main__":
