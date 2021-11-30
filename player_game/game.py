@@ -62,13 +62,13 @@ class Rat_Game:
             draw_text('SELECT LEVEL', MENU_FONT, (255,255,255), self.screen, 8000, 30)
             draw_text('1  2  3  4  5  6  7  8  9', MENU_FONT, (255,255,255), self.screen, 8000, 250)
 
-            pg.display.update()
+            pygame.display.update()
 
-            for event in pg.event.get():
+            for event in pygame.event.get():
                 if event.type == QUIT:
-                    pg.quit()
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_RETURN:
+                    pygame.quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
                         self.grid.grid, self.grid_ai.grid = get_grid(cursor_pos)
                         self.player.x, self.player.y, self.agent.x, self.agent.x = get_pos(cursor_pos)
 
@@ -76,16 +76,20 @@ class Rat_Game:
                         self.grid_ai.populate_lists()
 
                         return 0
-                    if event.key == pg.K_RIGHT and cursor_pos < 8:
+                    if event.key == pygame.K_RIGHT and cursor_pos < 8:
                         cursor_pos += 1
-                    if event.key == pg.K_LEFT and cursor_pos > 0:
+                    if event.key == pygame.K_LEFT and cursor_pos > 0:
                         cursor_pos -= 1
 
     def game_step(self):
         if self.grid.done:
-            self.reset()
+            self.win_screen(0)
+            return 1
+            #self.reset()
         if self.grid_ai.done:
-            self.reset()
+            self.win_screen(1)
+            return 1
+            #self.reset()
         
 
         for event in pygame.event.get():
@@ -129,7 +133,8 @@ class Rat_Game:
         self.clock.tick(60)
 
         # Retorna os dados importantes desse step
-        return self.grid.done, self.player.score
+        #return self.grid.done, self.player.score
+        return 0
 
     def maze_maker(self):
 
@@ -226,7 +231,9 @@ class Rat_Game:
         while True:
 
             if self.grid_ai.done:
-                self.reset()
+                self.win_screen(2)
+                return 0
+                #self.reset()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -251,6 +258,30 @@ class Rat_Game:
             # return self.grid_ai.done, self.player.score
 
             pygame.display.update()
+
+    def win_screen(self, select):
+
+        while True:
+            
+            if select == 0: #Player won
+                draw_text('You won the game!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
+            elif select == 1: #AI won (Player vs IA)
+                draw_text('Rattatail won the game!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
+            elif select == 2: # AI won (Maze maker)
+                draw_text('Rattatail found the way out!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
+
+            draw_text('Press enter to return to the Main Menu', OPTIONS_FONT, (255,255,255), self.screen, 8000, 330)
+            
+            pygame.display.update()
+
+            for event in pygame.event.get():            
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        return 0
+                        
 
     def save_maze(self, maze):
         f = open(os.path.join(os.getcwd(), "player_game",
@@ -642,12 +673,15 @@ class Grid:
 
 
 if __name__ == "__main__":
-    game = Rat_Game()
-    mode_selection = main_menu(game.screen)
+    while True:
+        game = Rat_Game()
+        mode_selection = main_menu(game.screen)
 
-    if mode_selection == 0:    # Maze maker
-        game.maze_maker()
-    elif mode_selection == 1:  # Player vs AI
-        game.level_select()
-        while True:
-            game.game_step()
+        finished = 0
+
+        if mode_selection == 0:    # Maze maker
+            game.maze_maker()
+        elif mode_selection == 1:  # Player vs AI
+            game.level_select()
+            while finished == 0:
+                finished = game.game_step()
