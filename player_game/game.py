@@ -141,6 +141,7 @@ class Rat_Game:
         maze = [[0]*self.grid_ai.n_cols for i in range(self.grid_ai.n_rows)]
         rat_flag = 0
         enter_flag = 0
+        finish_flag = 0
 
         while not enter_flag:
             self.screen.fill((100, 100, 100))
@@ -168,9 +169,15 @@ class Rat_Game:
                         self.agent.initial_y = mouse_y
                         rat_flag = 1
 
+                    if event.key == K_f and finish_flag == 0 and mouse_pos[0] < self.width//2:
+                        maze[mouse_x][mouse_y] = 2
+                        finish_flag = 1
+
                     if event.key == K_DELETE and mouse_pos[0] < self.width//2:
                         if maze[mouse_x][mouse_y] == 10:
                             rat_flag = 0
+                        elif maze[mouse_x][mouse_y] == 2:
+                            finish_flag = 0
                         elif maze[mouse_x][mouse_y] == 5:
                             self.grid_ai.holes_x.remove(mouse_x)
                             self.grid_ai.holes_y.remove(mouse_y)
