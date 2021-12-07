@@ -1,6 +1,7 @@
-from os import stat
+import os
 from random import choice
 import gym
+from matplotlib.pyplot import grid
 import pygame
 from player import Player
 from grid import Grid
@@ -40,8 +41,6 @@ class Rat_Game(gym.Env):
         pygame.display.set_caption("Rar_Game_Env")
         self.clock = pygame.time.Clock()
 
-        self.reward_ahead = False
-
     def step(self, action):
 
         self.curr_step += 1
@@ -56,6 +55,7 @@ class Rat_Game(gym.Env):
         self.agent = Player(0, 0, "Agent")
         self.maze = Grid(self.agent, n_cols=10, n_rows=10)
 
+        self.number_cheese = 5
         self.iteration += 1
         self.curr_step = 0
 
@@ -108,64 +108,31 @@ class Rat_Game(gym.Env):
         # (2, 1) -> (1,1) + (0,1) -> [0,0]
 
         # Retornar linha reta
-        state = []
+        state = list()
 
         current_x = self.agent.x
         current_y = self.agent.y
+        current_cheese = self.number_cheese
         state.append(current_x)
         state.append(current_y)
 
-        if self.maze.is_valid_position(current_x + 1, current_y):
-            state.append(self.maze.grid[current_x + 1, current_y])
-        else:
-            state.append(3)
-
-        if self.maze.is_valid_position(current_x - 1, current_y):
-            state.append(self.maze.grid[current_x - 1, current_y])
-        else:
-            state.append(3)
-        
-        if self.maze.is_valid_position(current_x, current_y + 1):
-            state.append(self.maze.grid[current_x, current_y + 1])
-        else:
-            state.append(3)
-            
-        if self.maze.is_valid_position(current_x, current_y - 1):
-            state.append(self.maze.grid[current_x, current_y - 1])
-        else:
-            state.append(3)
-
-
         if self.agent.direction == "Up":
-            current_x -= 2
-
-            if self.maze.is_valid_position(current_x, current_y):
-                state.append(self.maze.grid[current_x, current_y])
-            else:
-                state.append(3)
-
+            current_x -= 1
         if self.agent.direction == "Down":
-            current_x += 2
-            if self.maze.is_valid_position(current_x, current_y):
-                state.append(self.maze.grid[current_x, current_y])
-            else:
-                state.append(3)
-
+            current_x += 1
         if self.agent.direction == "Right":
-            current_y += 2
-            if self.maze.is_valid_position(current_x, current_y):
-                state.append(self.maze.grid[current_x, current_y])
-            else:
-                state.append(3)
-
+            current_y += 1
         if self.agent.direction == "Left":
-            current_y -= 2
-            if self.maze.is_valid_position(current_x, current_y):
-                state.append(self.maze.grid[current_x, current_y])
-            else:
-                state.append(3)
+            current_y -= 1
 
-        return state  # (self.agent.x, self.agent.y)
+        if self.maze.is_valid_position(current_x, current_y):
+            state.append(self.maze.grid[current_x][current_y])
+        else:
+            state.append(3)
+
+        state.append(current_cheese)
+
+        return state
 
     def _take_action(self, action):
         # print(action)
@@ -174,18 +141,15 @@ class Rat_Game(gym.Env):
         self.agent.move(directions[action], self.maze)
 
     def _get_reward(self):
-        #reward = 1
+        # reward = 1
         reward = -0.01
-
-        if self.reward_ahead:
-            reward += 0.01
-            self.reward_ahead = False
 
         if self.maze.done:
             reward += 5
 
         elif self.agent.eaten_cheese:
             reward += 1
+            self.number_cheese -= 1
 
         return reward
 
@@ -193,7 +157,7 @@ class Rat_Game(gym.Env):
 EPISODES = 10000
 RENDER_EPISODE = 200
 EPSILON_MINIMUM = 0.001
-DECAY = np.prod((10, 10), dtype=float) / 3
+DECAY = np.prod((10, 10), dtype=float) / 2
 LEARNING_RATE_MINIMUM = 0.2
 DISCOUNT = 0.99
 
@@ -205,16 +169,10 @@ class Maze_agent:
         self.state_bounds = list(zip([0, 0], [10, 10]))
         self.number_actions = 4
         self.number_blocks = 5
-        self.vision = (
-            self.number_blocks,
-            self.number_blocks,
-            self.number_blocks,
-            self.number_blocks,
-            self.number_blocks,
-        )
-        self.Q = np.zeros(
-            self.maze_size + self.vision + (self.number_actions,), dtype=float
-        )  # FIX #ERRO NO Q
+
+        self.Q = np.zeros(self.maze_size + (5,) + (6,) + (self.number_actions,), dtype=float)
+        # self.Q = self.load_model("player_game/env/model/model.pickle")
+
         self.epsilon = 1
         self.learning_rate = 1
         self.decay = DECAY
@@ -228,17 +186,20 @@ class Maze_agent:
     def decide_action(self, state) -> int:
 
         if np.random.random() < self.epsilon:
-            action = choice(list(range(4)))  # self.env.action_space.sample()
+            action = choice(list(range(4))) 
         else:
-            #print(f"State: {state}")
-            #print(f"Q[state]: {self.Q[state]}")
             action = int(np.argmax(self.Q[state]))
 
         return action
 
     def update_q(self, current_state, action, reward, next_state):  # FIX
 
-        self.Q[tuple(current_state) + (action,)] = self.Q[tuple(current_state) + (action,)] + self.learning_rate * (reward+ self.discount * np.max(self.Q[tuple(next_state)])- self.Q[tuple(current_state) + (action,)]
+        self.Q[tuple(current_state) + (action,)] = self.Q[
+            tuple(current_state) + (action,)
+        ] + self.learning_rate * (
+            reward
+            + self.discount * np.max(self.Q[tuple(next_state)])
+            - self.Q[tuple(current_state) + (action,)]
         )
 
     def update_learning_rate(self, episode) -> float:
@@ -267,7 +228,7 @@ class Maze_agent:
             while not done:
 
                 if episode % RENDER_EPISODE == 0:
-                    #self.save_model("model/model.pickle")
+                    # self.save_model("player_game/env/model/model.pickle")
                     self.env._render()
                     time.sleep(0.02)
 
@@ -283,10 +244,10 @@ class Maze_agent:
 
                 moves += 1
 
-                #if moves >= 1000:
-                    #done = True
-            
-            if(episode > 200):
+                # if moves >= 1000:
+                # done = True
+
+            if episode > 200:
                 self.epsilon = self.update_epsilon(episode - 200)
                 self.learning_rate = self.update_learning_rate(episode - 200)
 
