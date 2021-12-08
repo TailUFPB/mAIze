@@ -100,14 +100,6 @@ class Rat_Game(gym.Env):
         pygame.display.update()
 
     def _get_state(self):
-        # [0 , 0 , 0,  0]
-        # [0 , 3 , 0,  0]
-        # [0 , ^ , 0 , 0]
-        # [0 , 0 , 0,  0]
-
-        # (2, 1) -> (1,1) + (0,1) -> [0,0]
-
-        # Retornar linha reta
         state = list()
 
         current_x = self.agent.x
@@ -141,7 +133,6 @@ class Rat_Game(gym.Env):
         self.agent.move(directions[action], self.maze)
 
     def _get_reward(self):
-        # reward = 1
         reward = -0.01
 
         if self.maze.done:
@@ -157,7 +148,7 @@ class Rat_Game(gym.Env):
 EPISODES = 10000
 RENDER_EPISODE = 200
 EPSILON_MINIMUM = 0.001
-DECAY = np.prod((10, 10), dtype=float) / 20 #Decay era / 2
+DECAY = np.prod((10, 10), dtype=float) / 2 
 LEARNING_RATE_MINIMUM = 0.2
 DISCOUNT = 0.99
 
@@ -170,7 +161,9 @@ class Maze_agent:
         self.number_actions = 4
         self.number_blocks = 5
 
-        self.Q = self.load_model("player_game/env/model/model.pickle")
+        self.Q = np.zeros(
+            self.maze_size + (5,) + (6,) + (self.number_actions,), dtype=float
+        )
 
         self.epsilon = 1
         self.learning_rate = 1
@@ -180,7 +173,7 @@ class Maze_agent:
         self.all_rewards = []
         self.mean_rewards = []
 
-    def discretize_state(self, state) -> tuple:
+    def discretize_state(self, state) -> tuple:  # FIX
         return tuple(state)
 
     def decide_action(self, state) -> int:
@@ -228,7 +221,7 @@ class Maze_agent:
             while not done:
 
                 if episode % RENDER_EPISODE == 0 and episode > 1:
-                    self.save_model("player_game/env/model/model.pickle")
+                    self.save_model("player_game/env/model/modelTraining.pickle")
                     self.env._render()
                     time.sleep(0.02)
 
@@ -244,7 +237,7 @@ class Maze_agent:
 
                 moves += 1
 
-            if True:
+            if episode >= 300:
                 self.epsilon = self.update_epsilon(episode)
                 self.learning_rate = self.update_learning_rate(episode)
 
