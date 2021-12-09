@@ -61,7 +61,22 @@ class Rat_Game:
             self.grid_ai.grid[self.grid_ai.cheeses_x[i]][self.grid_ai.cheeses_y[i]] = 4
         
         return 0
+
+    def reset_pvi(self, winner):
+
+        if winner == 0: #Jogador venceu o jogo
+            self.grid.grid[self.player.x][self.player.y] = 2
+        else: #Rattatail venceu o jogo
+            self.grid_ai.grid[self.agent.x][self.agent.y] = 2
+
+        self.agent.x, self.agent.y = self.agent.initial_x, self.agent.initial_y
+        self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
+
+        for i in range(len(self.grid_ai.cheeses_x)):
+            self.grid_ai.grid[self.grid_ai.cheeses_x[i]][self.grid_ai.cheeses_y[i]] = 4
+            self.grid.grid[self.grid.cheeses_x[i]][self.grid.cheeses_y[i]] = 4
         
+        return 0
 
     def level_select(self):
         cursor_pos = 0
@@ -95,13 +110,31 @@ class Rat_Game:
 
     def game_step(self):
         if self.grid.done:
-            self.win_screen(0)
-            return 1
-            #self.reset()
+            replay = self.win_screen(0)
+
+            if replay:
+                self.reset_pvi(0)
+                self.grid.done = False
+            else:
+                return 1
+            
         if self.grid_ai.done:
-            self.win_screen(1)
-            return 1
-            #self.reset()
+            replay = self.win_screen(1)
+
+            if replay:
+                self.reset_pvi(1)
+                self.grid_ai.done = False
+            else:
+                return 1
+
+        if self.grid_ai.done:
+                replay = self.win_screen(2)
+                
+                if replay:
+                    self.reset_mm()
+                    self.grid_ai.done = False
+                else:
+                    return 0
         
 
         for event in pygame.event.get():
