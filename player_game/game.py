@@ -37,19 +37,31 @@ class Rat_Game:
         pygame.display.set_caption("Rat")
         self.clock = pygame.time.Clock()
 
-        self.reset()  # inicializa o jogador e o grid
+        self.start()  # inicializa o jogador e o grid
 
         # Dimensoes de cada celula do grid na tela
         self.rect_width = (self.width//2)//self.grid.n_cols
         self.rect_height = self.height//self.grid.n_rows
 
-    def reset(self):
+    def start(self):
         self.player = Player(1, 1, "Player")
         self.agent = Player(0, 0, "Agent")
         self.player.initial_x, self.player.initial_y = 0, 0
         self.agent.initial_x, self.agent.initial_y = 0, 0
         self.grid = Grid(self.player, n_cols=10, n_rows=10)
         self.grid_ai = Grid(self.agent, n_cols=10, n_rows=10)
+    
+    def reset_mm(self):
+
+        self.grid_ai.grid[self.agent.x][self.agent.y] = 2
+
+        self.agent.x, self.agent.y = self.agent.initial_x, self.agent.initial_y
+
+        for i in range(len(self.grid_ai.cheeses_x)):
+            self.grid_ai.grid[self.grid_ai.cheeses_x[i]][self.grid_ai.cheeses_y[i]] = 4
+        
+        return 0
+        
 
     def level_select(self):
         cursor_pos = 0
@@ -69,7 +81,7 @@ class Rat_Game:
                     pygame.quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
-                        self.grid.grid, self.grid_ai.grid = get_grid(cursor_pos)
+                        self.grid.grid, self.grid_ai.grid = get_grid(cursor_pos), get_grid(cursor_pos)
                         self.player.x, self.player.y, self.agent.x, self.agent.x = get_pos(cursor_pos)
 
                         self.grid.populate_lists()
@@ -234,13 +246,18 @@ class Rat_Game:
             pygame.display.update()
 
         self.grid_ai.grid = maze
+        self.grid_ai.populate_lists()
 
         while True:
 
             if self.grid_ai.done:
-                self.win_screen(2)
-                return 0
-                #self.reset()
+                replay = self.win_screen(2)
+                
+                if replay:
+                    self.reset_mm()
+                    self.grid_ai.done = False
+                else:
+                    return 0
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -277,7 +294,8 @@ class Rat_Game:
             elif select == 2: # AI won (Maze maker)
                 draw_text('Rattatail found the way out!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
 
-            draw_text('Press enter to return to the Main Menu', OPTIONS_FONT, (255,255,255), self.screen, 8000, 330)
+            draw_text('Press Enter to play again', OPTIONS_FONT, (255,255,255), self.screen, 8000, 330)
+            draw_text('Press ESC to return to the Main Menu', OPTIONS_FONT, (255,255,255), self.screen, 8000, 430)
             
             pygame.display.update()
 
@@ -286,8 +304,10 @@ class Rat_Game:
                     pygame.quit()
                     quit()
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
+                    if event.key == pygame.K_ESCAPE:
                         return 0
+                    elif event.key == pygame.K_RETURN:
+                        return 1
                         
 
     def save_maze(self, maze):
@@ -596,7 +616,7 @@ class Grid:
                            [0, 0, 3, 0, 0, 0, 3, 3, 0, 0]]).T
 
         # Posicao do objetivo
-        self.goal_x = randint(0, n_cols-1)
+        '''self.goal_x = randint(0, n_cols-1)
         self.goal_y = randint(0, n_rows-1)
 
         while self.grid[self.goal_x][self.goal_y] != 2:
@@ -605,7 +625,7 @@ class Grid:
                 self.grid[self.goal_x][self.goal_y] = 2
             else:
                 self.goal_x = randint(0, n_cols-1)
-                self.goal_y = randint(0, n_rows-1)
+                self.goal_y = randint(0, n_rows-1)'''
 
         # Posicoes dos queijos
         self.cheeses_x = []

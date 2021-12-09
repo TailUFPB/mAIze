@@ -251,7 +251,7 @@ def get_grid(cursor):
                            [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
                            [0, 0, 3, 0, 0, 0, 3, 3, 0, 0]]).T,]
 
-    return grid_list[cursor], grid_list[cursor]
+    return grid_list[cursor]
 
 def get_pos(cursor):
 
