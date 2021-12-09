@@ -8,10 +8,23 @@ import os
 pygame.init()
 font = pygame.font.SysFont('arial', 25)
 
-rat_up = load_image("spr_rat_up.png")
-rat_down = load_image("spr_rat_down.png")
-rat_left = load_image("spr_rat_left.png")
-rat_right = load_image("spr_rat_right.png")
+def select_game_skin(skin):
+    global rat_up 
+    global rat_down 
+    global rat_left
+    global rat_right
+
+    if skin == 0:
+        rat_up = load_image("spr_rat_up.png")
+        rat_down = load_image("spr_rat_down.png")
+        rat_left = load_image("spr_rat_left.png")
+        rat_right = load_image("spr_rat_right.png")
+    elif skin == 1:
+        rat_up = load_image("spr_remy_up.png")
+        rat_down = load_image("spr_remy_down.png")
+        rat_left = load_image("spr_remy_left.png")
+        rat_right = load_image("spr_remy_right.png")
+    return 0
 
 human_rat_up = load_image("spr_human_rat_up.png", res=(64, 64))
 human_rat_down = load_image("spr_human_rat_down.png", res=(64, 64))
@@ -66,7 +79,7 @@ class Rat_Game:
 
         if winner == 0: #Jogador venceu o jogo
             self.grid.grid[self.player.x][self.player.y] = 2
-        else: #Rattatail venceu o jogo
+        else: #Ratatail venceu o jogo
             self.grid_ai.grid[self.agent.x][self.agent.y] = 2
 
         self.agent.x, self.agent.y = self.agent.initial_x, self.agent.initial_y
@@ -267,11 +280,11 @@ class Rat_Game:
                       (0, 0, 0), self.screen, 550, 50)
             draw_text("Left Mouse to place Wall", font,
                       (0, 0, 0), self.screen, 550, 150)
-            draw_text("R to place Rattatail", font,
+            draw_text("R to place Ratatail", font,
                       (0, 0, 0), self.screen, 550, 250)
             draw_text("Delete to remove cell content", font,
                       (0, 0, 0), self.screen, 550, 350)
-            draw_text("Enter to make Ratattail play the game",
+            draw_text("Enter to make Ratatail play the game",
                       font, (0, 0, 0), self.screen, 550, 450)
             draw_text("Esc to save maze and quit", font,
                       (0, 0, 0), self.screen, 550, 550)
@@ -323,9 +336,9 @@ class Rat_Game:
             if select == 0: #Player won
                 draw_text('You won the game!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
             elif select == 1: #AI won (Player vs IA)
-                draw_text('Rattatail won the game!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
+                draw_text('Ratatail won the game!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
             elif select == 2: # AI won (Maze maker)
-                draw_text('Rattatail found the way out!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
+                draw_text('Ratatail found the way out!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
 
             draw_text('Press Enter to play again', OPTIONS_FONT, (255,255,255), self.screen, 8000, 330)
             draw_text('Press ESC to return to the Main Menu', OPTIONS_FONT, (255,255,255), self.screen, 8000, 430)
@@ -735,7 +748,9 @@ class Grid:
 if __name__ == "__main__":
     while True:
         game = Rat_Game()
-        mode_selection = main_menu(game.screen)
+        mode_selection, skin = main_menu(game.screen)
+
+        select_game_skin(skin)
 
         finished = 0
 

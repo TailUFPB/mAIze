@@ -8,11 +8,21 @@ from numpy import array
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 500
 pg.init()
-MENU_FONT = pg.font.SysFont('comicsans', 140)
-OPTIONS_FONT = pg.font.SysFont('comicsans', 60)
-SELECT_FONT = pg.font.SysFont('comicsans', 80)
+MENU_FONT = pg.font.SysFont('arial', 140)
+OPTIONS_FONT = pg.font.SysFont('arial', 60)
+SKINS_FONT = pg.font.SysFont('arial', 40)
+SELECT_FONT = pg.font.SysFont('arial', 80)
 
-RAT_IMAGE = pg.image.load(os.path.join(os.getcwd(),'assets', 'spr_rat_right.png'))
+def load_image(img_name, path = os.path.join(os.getcwd(),"assets"), res = None):
+    if res:
+        return pg.transform.scale(pg.image.load(os.path.join(path, img_name)), res)
+    else:
+        return pg.image.load(os.path.join(path, img_name))
+
+RAT_IMAGE = load_image('spr_rat_right.png')
+RAT_DOWN = load_image('spr_rat_down.png', res=(200,200))
+RAT_MISTERY = load_image('spr_mistery_rat.png', res=(200,200))
+REMY_DOWN = load_image('spr_remy_down.png', res=(200,200))
 
 def draw_text(text, font, color, surface, x, y):
     draw_text = font.render(text, 1, color)
@@ -51,10 +61,10 @@ def main_menu(surface):
                     if cursor_pos == 0:
                         game_mode = mode_select(surface)
                         if game_mode >= 0:
-                            return game_mode
+                            return game_mode, skin
 
                     elif cursor_pos == 1:
-                        extras_menu(surface)
+                        skin = extras_menu(surface)
     
     return 0
 
@@ -66,7 +76,7 @@ def extras_menu(surface):
         surface.fill((0,0,0))
         
         draw_text('TUTORIAL', OPTIONS_FONT, (255,255,255), surface, 8000, 50)
-        draw_text('OPTIONS', OPTIONS_FONT, (255,255,255), surface, 8000, 8000)
+        draw_text('SKINS', OPTIONS_FONT, (255,255,255), surface, 8000, 8000)
         draw_text('CREDITS', OPTIONS_FONT, (255,255,255), surface, 8000, 350)
 
         surface.blit(RAT_IMAGE, (320, cursor_pos*100 + 135))
@@ -86,7 +96,7 @@ def extras_menu(surface):
                     if cursor_pos == 0:
                         tutorial_menu(surface)
                     elif cursor_pos == 1:
-                        options_menu(surface)
+                        return skins_menu(surface)
                     elif cursor_pos == 2:
                         credits_menu(surface)
 
@@ -98,8 +108,66 @@ def extras_menu(surface):
 def tutorial_menu(surface):
     pass
 
-def options_menu(surface):
-    pass
+def skins_menu(surface, dog_guilherme=False):
+    cursor_pos = 0
+
+    while True:
+        surface.fill((80,80,80))
+        
+        draw_text('SELECT A SKIN', SELECT_FONT, (255,255,255), surface, 8000, 50)
+
+        if cursor_pos == 0:
+            draw_text('RATATAIL', SKINS_FONT, (138,3,3), surface, 112, 350)
+            draw_text('REMY', SKINS_FONT, (255,255,255), surface, 445, 350)
+
+            if not dog_guilherme:
+                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+            else:
+                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+
+        elif cursor_pos == 1:
+            draw_text('RATATAIL', SKINS_FONT, (255,255,255), surface, 112, 350)
+            draw_text('REMY', SKINS_FONT, (138,3,3), surface, 445, 350)
+
+            if not dog_guilherme:
+                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+            else:
+                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+
+        elif cursor_pos == 2:
+            draw_text('RATATAIL', SKINS_FONT, (255,255,255), surface, 112, 350)
+            draw_text('REMY', SKINS_FONT, (255,255,255), surface, 445, 350)
+
+            if not dog_guilherme:
+                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+            else:
+                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+
+        surface.blit(RAT_DOWN, (100, 140))
+        surface.blit(REMY_DOWN, (400, 140))
+
+        if not dog_guilherme:
+            surface.blit(RAT_MISTERY, (700, 140))
+        else:
+            pass
+
+        pg.display.update()
+
+        for event in pg.event.get():
+            if event.type == QUIT:
+                pg.quit()
+                quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_RIGHT and cursor_pos < 2:
+                    cursor_pos += 1
+                if event.key == pg.K_LEFT and cursor_pos > 0:
+                    cursor_pos -= 1
+                if event.key == pg.K_RETURN:
+                    return cursor_pos
+                elif event.key == pg.K_ESCAPE:
+                    return 0
+    
+    return 0
 
 def credits_menu(surface):
 
