@@ -23,6 +23,7 @@ RAT_IMAGE = load_image('spr_rat_right.png')
 RAT_DOWN = load_image('spr_rat_down.png', res=(200,200))
 RAT_MISTERY = load_image('spr_mistery_rat.png', res=(200,200))
 REMY_DOWN = load_image('spr_remy_down.png', res=(200,200))
+CACHORRO_DOWN = load_image('spr_cachorro_down.png', res=(200,200))
 
 def draw_text(text, font, color, surface, x, y):
     draw_text = font.render(text, 1, color)
@@ -108,8 +109,18 @@ def extras_menu(surface):
 def tutorial_menu(surface):
     pass
 
-def skins_menu(surface, dog_guilherme=False):
+def skins_menu(surface):
     cursor_pos = 0
+
+    dog_guilherme = True
+
+    file1 = open('player_game/levels.txt', 'r')
+    levels_completed = file1.readlines()
+    file1.close()
+
+    for i in levels_completed:
+        if i == '0\n':
+            dog_guilherme = False
 
     while True:
         surface.fill((80,80,80))
@@ -123,7 +134,8 @@ def skins_menu(surface, dog_guilherme=False):
             if not dog_guilherme:
                 draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
             else:
-                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+                draw_text('CACHORRO', SKINS_FONT, (255,255,255), surface, 680, 350)
+                draw_text('DE GUILHERME', SKINS_FONT, (255,255,255), surface, 645, 390)
 
         elif cursor_pos == 1:
             draw_text('RATATAIL', SKINS_FONT, (255,255,255), surface, 112, 350)
@@ -132,16 +144,18 @@ def skins_menu(surface, dog_guilherme=False):
             if not dog_guilherme:
                 draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
             else:
-                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+                draw_text('CACHORRO', SKINS_FONT, (255,255,255), surface, 680, 350)
+                draw_text('DE GUILHERME', SKINS_FONT, (255,255,255), surface, 645, 390)
 
         elif cursor_pos == 2:
             draw_text('RATATAIL', SKINS_FONT, (255,255,255), surface, 112, 350)
             draw_text('REMY', SKINS_FONT, (255,255,255), surface, 445, 350)
 
             if not dog_guilherme:
-                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+                draw_text('?', SKINS_FONT, (138,3,3), surface, 790, 350)
             else:
-                draw_text('?', SKINS_FONT, (255,255,255), surface, 790, 350)
+                draw_text('CACHORRO', SKINS_FONT, (138,3,3), surface, 680, 350)
+                draw_text('DE GUILHERME', SKINS_FONT, (138,3,3), surface, 645, 390)
 
         surface.blit(RAT_DOWN, (100, 140))
         surface.blit(REMY_DOWN, (400, 140))
@@ -149,7 +163,7 @@ def skins_menu(surface, dog_guilherme=False):
         if not dog_guilherme:
             surface.blit(RAT_MISTERY, (700, 140))
         else:
-            pass
+            surface.blit(CACHORRO_DOWN, (700, 140))
 
         pg.display.update()
 
@@ -162,7 +176,7 @@ def skins_menu(surface, dog_guilherme=False):
                     cursor_pos += 1
                 if event.key == pg.K_LEFT and cursor_pos > 0:
                     cursor_pos -= 1
-                if event.key == pg.K_RETURN:
+                if event.key == pg.K_RETURN and (cursor_pos < 2 or dog_guilherme == True):
                     return cursor_pos
                 elif event.key == pg.K_ESCAPE:
                     return 0
