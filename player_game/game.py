@@ -115,15 +115,25 @@ class Rat_Game:
                         self.grid.populate_lists()
                         self.grid_ai.populate_lists()
 
-                        return 0
+                        return cursor_pos
                     if event.key == pygame.K_RIGHT and cursor_pos < 8:
                         cursor_pos += 1
                     if event.key == pygame.K_LEFT and cursor_pos > 0:
                         cursor_pos -= 1
 
-    def game_step(self):
+    def game_step(self, level):
         if self.grid.done:
             replay = self.win_screen(0)
+
+            file1 = open('player_game/levels.txt', 'r')
+            levels = file1.readlines()
+            file1.close()
+
+            levels[level] = '1\n'
+
+            file2 = open('player_game/levels.txt', 'w')
+            file2.writelines(levels)
+            file2.close()
 
             if replay:
                 self.reset_pvi(0)
@@ -757,6 +767,6 @@ if __name__ == "__main__":
         if mode_selection == 0:    # Maze maker
             game.maze_maker()
         elif mode_selection == 1:  # Player vs AI
-            game.level_select()
+            level = game.level_select()
             while finished == 0:
-                finished = game.game_step()
+                finished = game.game_step(level)

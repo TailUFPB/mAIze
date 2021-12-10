@@ -37,6 +37,7 @@ def draw_text(text, font, color, surface, x, y):
 def main_menu(surface):
 
     cursor_pos = 0
+    skin = 0
 
     while True:
         surface.fill((0,0,0))
