@@ -34,10 +34,9 @@ def draw_text(text, font, color, surface, x, y):
     
     surface.blit(draw_text, (x, y))
 
-def main_menu(surface):
+def main_menu(surface, skin):
 
     cursor_pos = 0
-    skin = 0
 
     while True:
         surface.fill((0,0,0))
@@ -124,7 +123,7 @@ def skins_menu(surface):
             dog_guilherme = False
 
     while True:
-        surface.fill((80,80,80))
+        surface.fill((0,0,0))
         
         draw_text('SELECT A SKIN', SELECT_FONT, (255,255,255), surface, 8000, 50)
 
@@ -196,6 +195,7 @@ def credits_menu(surface):
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
+                quit()
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     return 0
@@ -217,6 +217,7 @@ def mode_select(surface):
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
+                quit()
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
                     return -1

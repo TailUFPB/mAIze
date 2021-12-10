@@ -24,12 +24,19 @@ def select_game_skin(skin):
         rat_down = load_image("spr_remy_down.png")
         rat_left = load_image("spr_remy_left.png")
         rat_right = load_image("spr_remy_right.png")
+    elif skin == 2:
+        rat_up = load_image("spr_cachorro_up.PNG")
+        rat_down = load_image("spr_cachorro_down.PNG")
+        rat_left = load_image("spr_cachorro_left.PNG")
+        rat_right = load_image("spr_cachorro_right.PNG")
     return 0
 
 human_rat_up = load_image("spr_human_rat_up.png", res=(64, 64))
 human_rat_down = load_image("spr_human_rat_down.png", res=(64, 64))
 human_rat_left = load_image("spr_human_rat_left.png", res=(64, 64))
 human_rat_right = load_image("spr_human_rat_right.png", res=(64, 64))
+
+RAT_IMG = load_image('spr_rat_up.png')
 
 floor_img = load_image("spr_floor_normal.png", res=(50, 50))
 wall_img = load_image("spr_tile_middle.png", res=(50, 50))
@@ -97,7 +104,7 @@ class Rat_Game:
         while True:
             self.screen.fill((0,0,0))
 
-            self.screen.blit(rat_up, (cursor_pos*107 + 40, 330))
+            self.screen.blit(RAT_IMG, (cursor_pos*107 + 40, 330))
             
             draw_text('SELECT LEVEL', MENU_FONT, (255,255,255), self.screen, 8000, 30)
             draw_text('1  2  3  4  5  6  7  8  9', MENU_FONT, (255,255,255), self.screen, 8000, 250)
@@ -107,6 +114,7 @@ class Rat_Game:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
+                    quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         self.grid.grid, self.grid_ai.grid = get_grid(cursor_pos), get_grid(cursor_pos)
@@ -756,9 +764,11 @@ class Grid:
 
 
 if __name__ == "__main__":
+
+    skin = 0
     while True:
         game = Rat_Game()
-        mode_selection, skin = main_menu(game.screen)
+        mode_selection, skin = main_menu(game.screen, skin)
 
         select_game_skin(skin)
 
