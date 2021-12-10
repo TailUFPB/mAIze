@@ -215,151 +215,158 @@ class Rat_Game:
     def maze_maker(self):
 
         maze = [[0]*self.grid_ai.n_cols for i in range(self.grid_ai.n_rows)]
-        rat_flag = 0
-        enter_flag = 0
         finish_flag = 0
-
-        while not enter_flag:
-            self.screen.fill((100, 100, 100))
-            for event in pygame.event.get():
-                mouse_pos = pygame.mouse.get_pos()
-                mouse_x, mouse_y = mouse_pos[0]//self.rect_width, mouse_pos[1]//self.rect_height
-
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        self.save_maze(maze)
-                        return 0
-
-                    if event.key == K_RETURN:
-                        enter_flag = 1
-
-                    if event.key == K_r and rat_flag == 0 and mouse_pos[0] < self.width//2:
-                        maze[mouse_x][mouse_y] = 10
-                        self.agent.x = mouse_x
-                        self.agent.y = mouse_y
-                        self.agent.initial_x = mouse_x
-                        self.agent.initial_y = mouse_y
-                        rat_flag = 1
-
-                    if event.key == K_f and finish_flag == 0 and mouse_pos[0] < self.width//2:
-                        maze[mouse_x][mouse_y] = 2
-                        finish_flag = 1
-
-                    if event.key == K_DELETE and mouse_pos[0] < self.width//2:
-                        if maze[mouse_x][mouse_y] == 10:
-                            rat_flag = 0
-                        elif maze[mouse_x][mouse_y] == 2:
-                            finish_flag = 0
-                        elif maze[mouse_x][mouse_y] == 5:
-                            self.grid_ai.holes_x.remove(mouse_x)
-                            self.grid_ai.holes_y.remove(mouse_y)
-
-                        maze[mouse_x][mouse_y] = 0
-
-                    if event.key == K_t and mouse_pos[0] < self.width//2:
-                        maze[mouse_x][mouse_y] = 5
-                        self.grid_ai.holes_x.append(mouse_x)
-                        self.grid_ai.holes_y.append(mouse_y)
-
-                if pygame.mouse.get_pressed()[0] and mouse_pos[0] < self.width//2:
-                    maze[mouse_x][mouse_y] = 3
-
-                elif pygame.mouse.get_pressed()[2] and mouse_pos[0] < self.width//2:
-                    maze[mouse_x][mouse_y] = 4
-
-            for x in range(0, self.grid_ai.n_cols):
-                for y in range(0, self.grid_ai.n_rows):
-                    rect = pygame.Rect(
-                        x * self.rect_width,  y * self.rect_height, self.rect_width, self.rect_height)
-
-                    self.screen.blit(floor_img, rect)
-
-                    if maze[x][y] == 10:
-                        self.screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
-                                                  2, (y*self.rect_height)-32+self.rect_height//2))
-
-                    if maze[x][y] == 2:
-                        self.screen.blit(goal_img, rect)
-
-                    elif maze[x][y] == 3:
-                        self.screen.blit(wall_img, rect)
-
-                    elif maze[x][y] == 4:
-                        self.screen.blit(cheese_img, rect)
-
-                    elif maze[x][y] == 5:
-                        self.screen.blit(trap_closed_img, rect)
-
-            draw_text("Right Mouse to place Cheese", font,
-                      (0, 0, 0), self.screen, 550, 50)
-            draw_text("Left Mouse to place Wall", font,
-                      (0, 0, 0), self.screen, 550, 150)
-            draw_text("R to place Ratatail", font,
-                      (0, 0, 0), self.screen, 550, 250)
-            draw_text("Delete to remove cell content", font,
-                      (0, 0, 0), self.screen, 550, 350)
-            draw_text("Enter to make Ratatail play the game",
-                      font, (0, 0, 0), self.screen, 550, 450)
-            draw_text("Esc to save maze and quit", font,
-                      (0, 0, 0), self.screen, 550, 550)
-
-            pygame.display.update()
-
-        self.grid_ai.grid = maze
-        self.grid_ai.populate_lists()
-
+        rat_flag = 0
+        
         while True:
+            enter_flag = 0
+            while not enter_flag:
+                self.screen.fill((100, 100, 100))
+                for event in pygame.event.get():
+                    mouse_pos = pygame.mouse.get_pos()
+                    mouse_x, mouse_y = mouse_pos[0]//self.rect_width, mouse_pos[1]//self.rect_height
 
-            if self.grid_ai.done:
-                replay = self.win_screen(2)
-                
-                if replay:
-                    self.reset_mm()
-                    self.grid_ai.done = False
-                else:
-                    return 0
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-                if event.type == KEYDOWN:
-                    self.grid_ai.trap_hole = not self.grid_ai.trap_hole
+                    if event.type == KEYDOWN:
+                        if event.key == K_ESCAPE:
+                            self.save_maze(maze)
+                            return 0
 
-                    if event.key == K_RETURN:
-                        agent_move = choice(["Up", "Down", "Left", "Right"])
-                        self.agent.move(agent_move, self.grid_ai)
+                        if event.key == K_RETURN:
+                            enter_flag = 1
 
-            # Atualiza o grid com as mudancas realizadas nesse step
-            self.grid_ai.update()
-            self.draw_grid(self.screen)      # Renderiza o grid em self.screen
-            pygame.draw.rect(self.screen, (100, 100, 100),
-                             pygame.Rect(498, 0, 502, 500))
+                        if event.key == K_r and rat_flag == 0 and mouse_pos[0] < self.width//2:
+                            maze[mouse_x][mouse_y] = 10
+                            self.agent.x = mouse_x
+                            self.agent.y = mouse_y
+                            self.agent.initial_x = mouse_x
+                            self.agent.initial_y = mouse_y
+                            rat_flag = 1
 
-            self.clock.tick(60)
+                        if event.key == K_f and finish_flag == 0 and mouse_pos[0] < self.width//2:
+                            maze[mouse_x][mouse_y] = 2
+                            finish_flag = 1
 
-            # Retorna os dados importantes desse step
-            # return self.grid_ai.done, self.player.score
+                        if event.key == K_DELETE and mouse_pos[0] < self.width//2:
+                            if maze[mouse_x][mouse_y] == 10:
+                                rat_flag = 0
+                            elif maze[mouse_x][mouse_y] == 2:
+                                finish_flag = 0
+                            elif maze[mouse_x][mouse_y] == 5:
+                                self.grid_ai.holes_x.remove(mouse_x)
+                                self.grid_ai.holes_y.remove(mouse_y)
 
-            pygame.display.update()
+                            maze[mouse_x][mouse_y] = 0
+
+                        if event.key == K_t and mouse_pos[0] < self.width//2:
+                            maze[mouse_x][mouse_y] = 5
+                            self.grid_ai.holes_x.append(mouse_x)
+                            self.grid_ai.holes_y.append(mouse_y)
+
+                    if pygame.mouse.get_pressed()[0] and mouse_pos[0] < self.width//2:
+                        maze[mouse_x][mouse_y] = 3
+
+                    elif pygame.mouse.get_pressed()[2] and mouse_pos[0] < self.width//2:
+                        maze[mouse_x][mouse_y] = 4
+
+                for x in range(0, self.grid_ai.n_cols):
+                    for y in range(0, self.grid_ai.n_rows):
+                        rect = pygame.Rect(
+                            x * self.rect_width,  y * self.rect_height, self.rect_width, self.rect_height)
+
+                        self.screen.blit(floor_img, rect)
+
+                        if maze[x][y] == 10:
+                            self.screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
+                                                    2, (y*self.rect_height)-32+self.rect_height//2))
+
+                        if maze[x][y] == 2:
+                            self.screen.blit(goal_img, rect)
+
+                        elif maze[x][y] == 3:
+                            self.screen.blit(wall_img, rect)
+
+                        elif maze[x][y] == 4:
+                            self.screen.blit(cheese_img, rect)
+
+                        elif maze[x][y] == 5:
+                            self.screen.blit(trap_closed_img, rect)
+
+                draw_text("Right Mouse to place Cheese", font,
+                        (0, 0, 0), self.screen, 550, 50)
+                draw_text("Left Mouse to place Wall", font,
+                        (0, 0, 0), self.screen, 550, 150)
+                draw_text("R to place Ratatail", font,
+                        (0, 0, 0), self.screen, 550, 250)
+                draw_text("Delete to remove cell content", font,
+                        (0, 0, 0), self.screen, 550, 350)
+                draw_text("Enter to make Ratatail play the game",
+                        font, (0, 0, 0), self.screen, 550, 450)
+                draw_text("Esc to save maze and quit", font,
+                        (0, 0, 0), self.screen, 550, 550)
+
+                pygame.display.update()
+
+            self.grid_ai.grid = maze
+            self.grid_ai.populate_lists()
+
+            while True:
+
+                if self.grid_ai.done:
+                    replay = self.win_screen(2)
+                    
+                    if replay == 0:
+                        return 0
+                    elif replay == 1:
+                        self.reset_mm()
+                        self.grid_ai.done = False
+                    elif replay == 2:
+                        self.reset_mm()
+                        self.grid_ai.done = False
+                        maze[self.agent.x][self.agent.y] = 10
+                        break
+
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+                    if event.type == KEYDOWN:
+                        self.grid_ai.trap_hole = not self.grid_ai.trap_hole
+
+                        if event.key == K_RETURN:
+                            agent_move = choice(["Up", "Down", "Left", "Right"])
+                            self.agent.move(agent_move, self.grid_ai)
+
+                # Atualiza o grid com as mudancas realizadas nesse step
+                self.grid_ai.update()
+                self.draw_grid(self.screen)      # Renderiza o grid em self.screen
+                pygame.draw.rect(self.screen, (100, 100, 100),
+                                pygame.Rect(498, 0, 502, 500))
+
+                self.clock.tick(60)
+
+                # Retorna os dados importantes desse step
+                # return self.grid_ai.done, self.player.score
+
+                pygame.display.update()
 
     def win_screen(self, select):
 
         while True:
             
             if select == 0: #Player won
-                draw_text('You won the game!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
+                draw_text('You won the game!', OPTIONS_FONT, (255,255,255), self.screen, 8000, 8000)
             elif select == 1: #AI won (Player vs IA)
-                draw_text('Ratatail won the game!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
+                draw_text('Ratatail won the game!', OPTIONS_FONT, (255,255,255), self.screen, 8000, 8000)
             elif select == 2: # AI won (Maze maker)
-                draw_text('Ratatail found the way out!', MENU_FONT, (255,255,255), self.screen, 8000, 8000)
+                draw_text('Ratatail found the way out!', OPTIONS_FONT, (255,255,255), self.screen, 8000, 150)
+                draw_text('Press Space to edit the maze', OPTIONS_FONT, (255,255,255), self.screen, 8000, 280)
 
             draw_text('Press Enter to play again', OPTIONS_FONT, (255,255,255), self.screen, 8000, 330)
-            draw_text('Press ESC to return to the Main Menu', OPTIONS_FONT, (255,255,255), self.screen, 8000, 430)
+            draw_text('Press ESC to return to the Main Menu', OPTIONS_FONT, (255,255,255), self.screen, 8000, 380)
             
             pygame.display.update()
 
@@ -372,6 +379,8 @@ class Rat_Game:
                         return 0
                     elif event.key == pygame.K_RETURN:
                         return 1
+                    elif event.key == pygame.K_SPACE:
+                        return 2
                         
 
     def save_maze(self, maze):
