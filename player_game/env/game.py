@@ -67,6 +67,7 @@ class Rat_Game_Gym(gym.Env):
         self.iteration = -1
         self.curr_step = -1
         self.grid = grid
+        self.initial_x, self.initial_y = self.find_initial_pos(self.grid)
         self._reset()
         self.screen = screen
         pygame.display.set_caption("Rar_Game_Env")
@@ -83,7 +84,7 @@ class Rat_Game_Gym(gym.Env):
         return ob, reward, self.maze.done
 
     def _reset(self):
-        self.agent = Player(0, 0, "Agent")
+        self.agent = Player(self.initial_x, self.initial_y, "Agent")
         self.maze = Grid(self.agent, n_cols=10, n_rows=10, grid=self.grid)
 
         self.number_cheese = 5
@@ -197,6 +198,13 @@ class Rat_Game_Gym(gym.Env):
 
         return reward
 
+    def find_initial_pos(self, grid):
+
+        for i in range(len(grid)):
+            for j in range(len(grid[i])):
+                if grid[i][j] == 1:
+                    return i, j
+
 class Maze_agent:
     def __init__(self, maze, screen):
         self.env = Rat_Game_Gym(maze, screen)
@@ -250,7 +258,9 @@ class Maze_agent:
         return epsilon
 
     def train(self):
+        
         for episode in range(EPISODES):
+            
             print('comeco do for')
             current_state = self.env._reset()
             print('depois do reset')
@@ -264,8 +274,6 @@ class Maze_agent:
             print('antes do done')
 
             while not done:
-
-                #print('dentro do while')
 
                 if episode % RENDER_EPISODE == 0 or episode == 0:
                     self.save_model("player_game/env/model/model.pickle")
