@@ -1,8 +1,17 @@
 import pygame
+from player import Player
+from grid import Grid
 from pygame.locals import *
 from utils import *
 from random import randint, choice
 from numpy import array
+import numpy as np
+import gym
+import math
+import pickle
+import time
+import plot
+#from rat_game_env import Maze_agent
 import os
 
 pygame.init()
@@ -38,6 +47,13 @@ human_rat_right = load_image("spr_human_rat_right.png", res=(64, 64))
 
 RAT_IMG = load_image('spr_rat_up.png')
 
+EPISODES = 10000
+RENDER_EPISODE = 200
+EPSILON_MINIMUM = 0.001
+DECAY = np.prod((10, 10), dtype=float) / 20 #Decay era / 2
+LEARNING_RATE_MINIMUM = 0.2
+DISCOUNT = 0.99
+
 floor_img = load_image("spr_floor_normal.png", res=(50, 50))
 wall_img = load_image("spr_tile_middle.png", res=(50, 50))
 goal_img = load_image("spr_floor_goal.png", res=(50, 50))
@@ -45,6 +61,255 @@ cheese_img = load_image("spr_cheese.png", res=(50, 50))
 fire_img = load_image("spr_fire.png", res=(50,50))
 trap_closed_img = load_image("spr_floor_trap.png", res=(50,50))
 trap_open_img = load_image("spr_floor_trap_open.png", res=(50,50))
+
+class Rat_Game_Gym(gym.Env):
+    def __init__(self,grid,screen):
+        self.iteration = -1
+        self.curr_step = -1
+        self.grid = grid
+        self._reset()
+        self.screen = screen
+        pygame.display.set_caption("Rar_Game_Env")
+        self.clock = pygame.time.Clock()
+
+    def step(self, action):
+
+        self.curr_step += 1
+        self._take_action(action)
+        self.maze.update()
+
+        reward = self._get_reward()
+        ob = self._get_state()
+        return ob, reward, self.maze.done
+
+    def _reset(self):
+        self.agent = Player(0, 0, "Agent")
+        self.maze = Grid(self.agent, n_cols=10, n_rows=10, grid=self.grid)
+
+        self.number_cheese = 5
+        self.iteration += 1
+        self.curr_step = 0
+
+        return self._get_state()
+
+    def object_draw(self, pos, trap_hole, rect):
+        #Objetivo
+        if pos == 2:
+            self.screen.blit(goal_img, rect)
+
+        # Parede
+        elif pos == 3:
+            self.screen.blit(wall_img, rect)
+        # Queijo
+        elif pos == 4:
+            self.screen.blit(cheese_img, rect)
+
+        # Armadilha 1
+        elif pos == 5:
+            if trap_hole:
+                self.screen.blit(trap_open_img, rect)
+            else:
+                self.screen.blit(trap_closed_img, rect)
+
+    def _render(self, screen):
+
+
+        for x in range(0, self.maze.n_cols):
+            for y in range(0, self.maze.n_rows):
+                # Posicao
+                rect = pygame.Rect(
+                    x * 50,  y * 50, 50, 50)
+
+                # Chao
+                screen.blit(floor_img, rect)
+
+                # Agente
+                if self.maze.grid[x][y] == 1:
+                    if self.agent.direction == "Up":
+                        screen.blit(rat_up, ((x*50) - 32 + 50 //
+                                                2, (y*50)-32+50//2))
+                    elif self.agent.direction == "Down":
+                        screen.blit(rat_down, ((x*50) - 32 + 50 //
+                                                2, (y*50)-32+50//2))
+                    elif self.agent.direction == "Right":
+                        screen.blit(rat_right, ((x*50) - 32 + 50 //
+                                                2, (y*50)-32+50//2))
+                    else:
+                        screen.blit(rat_left, ((x*50) - 32 + 50 //
+                                                2, (y*50)-32+50//2))
+
+                self.object_draw(self.maze.grid[x][y], self.maze.trap_hole, rect)
+
+        self.clock.tick(1000)
+        pygame.display.update()
+
+    def _get_state(self):
+        # [0 , 0 , 0,  0]
+        # [0 , 3 , 0,  0]
+        # [0 , ^ , 0 , 0]
+        # [0 , 0 , 0,  0]
+
+        # (2, 1) -> (1,1) + (0,1) -> [0,0]
+
+        # Retornar linha reta
+        state = list()
+
+        current_x = self.agent.x
+        current_y = self.agent.y
+        current_cheese = self.number_cheese
+        state.append(current_x)
+        state.append(current_y)
+
+        if self.agent.direction == "Up":
+            current_x -= 1
+        if self.agent.direction == "Down":
+            current_x += 1
+        if self.agent.direction == "Right":
+            current_y += 1
+        if self.agent.direction == "Left":
+            current_y -= 1
+
+        if self.maze.is_valid_position(current_x, current_y):
+            state.append(self.maze.grid[current_x][current_y])
+        else:
+            state.append(3)
+
+        state.append(current_cheese)
+
+        return state
+
+    def _take_action(self, action):
+        # print(action)
+        self.agent.got_cheese = False
+        directions = ["Up", "Down", "Left", "Right"]
+        self.agent.move(directions[action], self.maze)
+
+    def _get_reward(self):
+        # reward = 1
+        reward = -0.01
+
+        if self.maze.done:
+            reward += 5
+
+        elif self.agent.eaten_cheese:
+            reward += 1
+            self.number_cheese -= 1
+
+        return reward
+
+class Maze_agent:
+    def __init__(self, maze, screen):
+        self.env = Rat_Game_Gym(maze, screen)
+        self.maze_size = tuple([10, 10])
+        self.state_bounds = list(zip([0, 0], [10, 10]))
+        self.number_actions = 4
+        self.number_blocks = 5
+
+        self.Q = self.load_model("player_game/env/model/model.pickle")
+
+        self.epsilon = 1
+        self.learning_rate = 1
+
+        self.decay = DECAY
+        self.discount = DISCOUNT
+        self.all_rewards = []
+        self.mean_rewards = []
+
+    def discretize_state(self, state) -> tuple:
+        return tuple(state)
+
+    def decide_action(self, state) -> int:
+
+        if np.random.random() < self.epsilon:
+            action = choice(list(range(4)))
+        else:
+            action = int(np.argmax(self.Q[state]))
+
+        return action
+
+    def update_q(self, current_state, action, reward, next_state):  # FIX
+
+        self.Q[tuple(current_state) + (action,)] = self.Q[
+            tuple(current_state) + (action,)
+        ] + self.learning_rate * (
+            reward
+            + self.discount * np.max(self.Q[tuple(next_state)])
+            - self.Q[tuple(current_state) + (action,)]
+        )
+
+    def update_learning_rate(self, episode) -> float:
+        learning_rate = min(1, 1 - math.log10((episode + 1) / DECAY))
+        learning_rate = max(learning_rate, LEARNING_RATE_MINIMUM)
+
+        return learning_rate
+
+    def update_epsilon(self, episode) -> float:
+        epsilon = min(1, 1 - math.log10((episode + 1) / DECAY))
+        epsilon = max(epsilon, EPSILON_MINIMUM)
+
+        return epsilon
+
+    def train(self):
+        for episode in range(EPISODES):
+            print('comeco do for')
+            current_state = self.env._reset()
+            print('depois do reset')
+            current_state = self.discretize_state(current_state)
+
+            done = False
+
+            rewards = 0
+
+            moves = 0
+            print('antes do done')
+
+            while not done:
+
+                #print('dentro do while')
+
+                if episode % RENDER_EPISODE == 0 or episode == 0:
+                    self.save_model("player_game/env/model/model.pickle")
+                    self.env._render(self.env.screen)
+                    time.sleep(0.2)
+
+                action = self.decide_action(current_state)
+
+                next_state, reward, done = self.env.step(action)
+                next_state = self.discretize_state(next_state)
+
+                self.update_q(current_state, action, reward, next_state)
+
+                current_state = next_state
+                rewards += reward
+
+                if moves > 1000:
+                    break
+
+                moves += 1
+
+            if True:
+                self.epsilon = self.update_epsilon(episode)
+                self.learning_rate = self.update_learning_rate(episode)
+
+            self.all_rewards.append(rewards)
+
+            if episode >= 100:
+                mean_reward = sum(self.all_rewards[-100:]) / 100
+            else:
+                mean_reward = sum(self.all_rewards) / (episode + 1)
+
+            self.mean_rewards.append(mean_reward)
+            plot.plot(self.all_rewards, self.mean_rewards, self.epsilon)
+
+        self.env.close()
+
+    def save_model(self, path):
+        with open(path, "wb") as model:
+            pickle.dump(self.Q, model)
+
+    def load_model(self, path) -> pickle:
+        with open(path, "rb") as model:
+            return pickle.load(model)
 
 class Rat_Game:
 
@@ -239,7 +504,7 @@ class Rat_Game:
                             enter_flag = 1
 
                         if event.key == K_r and rat_flag == 0 and mouse_pos[0] < self.width//2:
-                            maze[mouse_x][mouse_y] = 10
+                            maze[mouse_x][mouse_y] = 1
                             self.agent.x = mouse_x
                             self.agent.y = mouse_y
                             self.agent.initial_x = mouse_x
@@ -251,7 +516,7 @@ class Rat_Game:
                             finish_flag = 1
 
                         if event.key == K_DELETE and mouse_pos[0] < self.width//2:
-                            if maze[mouse_x][mouse_y] == 10:
+                            if maze[mouse_x][mouse_y] == 1:
                                 rat_flag = 0
                             elif maze[mouse_x][mouse_y] == 2:
                                 finish_flag = 0
@@ -279,7 +544,7 @@ class Rat_Game:
 
                         self.screen.blit(floor_img, rect)
 
-                        if maze[x][y] == 10:
+                        if maze[x][y] == 1:
                             self.screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
                                                     2, (y*self.rect_height)-32+self.rect_height//2))
 
@@ -312,46 +577,10 @@ class Rat_Game:
 
             self.grid_ai.grid = maze
             self.grid_ai.populate_lists()
+            
+            agent = Maze_agent(maze, self.screen)
+            agent.train()
 
-            while True:
-
-                if self.grid_ai.done:
-                    replay = self.win_screen(2)
-                    
-                    if replay == 0:
-                        return 0
-                    elif replay == 1:
-                        self.reset_mm()
-                        self.grid_ai.done = False
-                    elif replay == 2:
-                        self.reset_mm()
-                        self.grid_ai.done = False
-                        maze[self.agent.x][self.agent.y] = 10
-                        break
-
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        quit()
-                    if event.type == KEYDOWN:
-                        self.grid_ai.trap_hole = not self.grid_ai.trap_hole
-
-                        if event.key == K_RETURN:
-                            agent_move = choice(["Up", "Down", "Left", "Right"])
-                            self.agent.move(agent_move, self.grid_ai)
-
-                # Atualiza o grid com as mudancas realizadas nesse step
-                self.grid_ai.update()
-                self.draw_grid(self.screen)      # Renderiza o grid em self.screen
-                pygame.draw.rect(self.screen, (100, 100, 100),
-                                pygame.Rect(498, 0, 502, 500))
-
-                self.clock.tick(60)
-
-                # Retorna os dados importantes desse step
-                # return self.grid_ai.done, self.player.score
-
-                pygame.display.update()
 
     def win_screen(self, select):
 
@@ -406,7 +635,7 @@ class Rat_Game:
                 screen.blit(floor_img, rect)
 
                 # Agente
-                if self.grid_ai.grid[x][y] == 10:
+                if self.grid_ai.grid[x][y] == 1:
                     if self.agent.direction == "Up":
                         screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
                                              2, (y*self.rect_height)-32+self.rect_height//2))
@@ -594,183 +823,6 @@ class Rat_Game:
                 self.screen.blit(trap_open_img, rect)
             else:
                 self.screen.blit(trap_closed_img, rect)
-
-class Player:
-
-    def __init__(self, x, y, name):
-        # Atual posicao no grid
-        self.name = name
-        self.x = x
-        self.y = y
-
-        self.initial_x = 0
-        self.initial_y = 0
-
-        self.direction = "Up"
-
-        self.reward_amount = 1
-
-        self.score = 0
-
-    def move(self, direction, grid):
-
-        if direction == "Up":
-            self.direction = "Up"
-            if grid.is_valid_position(self.x, self.y - 1):
-                grid.clear_position(self.x, self.y)
-                self.y -= 1
-        if direction == "Down":
-            self.direction = "Down"
-            if grid.is_valid_position(self.x, self.y + 1):
-                grid.clear_position(self.x, self.y)
-                self.y += 1
-        if direction == "Left":
-            self.direction = "Left"
-            if grid.is_valid_position(self.x-1, self.y):
-                grid.clear_position(self.x, self.y)
-                self.x -= 1
-        if direction == "Right":
-            self.direction = "Right"
-            if grid.is_valid_position(self.x+1, self.y):
-                grid.clear_position(self.x, self.y)
-                self.x += 1
-
-
-class Grid:
-
-    """
-
-    Aqui e armazenado todo o estado do jogo. Esta classe recebe uma instancia de Player em sua inicializacao.
-
-    O estado do jogo e representado em uma matriz NxM, de forma que seus elementos representem diferentes entidades do jogo.
-    Esta forma de representacao nos permite adicionar novas entidades arbitrariamente com relativa facilidade.
-
-    1 -> Representa o jogador
-    2 -> Representa o objetivo
-    3 -> Representa um obstaculo
-    4 -> Queijo
-
-    Exemplo:
-
-    Um grid onde o jogador está no canto superior esquerdo mas não consegue alcançar o objetivo, pois esta cercado de obstaculos.
-
-    [1,0,3,0]
-    [0,0,3,0]
-    [3,3,3,0]
-    [0,0,0,2]
-
-    """
-
-    def __init__(self, player, n_rows=10, n_cols=10, screen_width=1000, screen_height=500):
-
-        self.player = player
-
-        # Dimensoes do grid
-        self.n_cols = n_cols
-        self.n_rows = n_rows
-
-        self.trap_hole = True
-
-        # Dimensoes da tela, importante para renderizar o grid.
-        self.screen_width = screen_width
-        self.screen_height = screen_height
-
-        self.done = False   # Variavel que determina se o jogo acabou
-
-        self.grid = array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 3, 3, 3, 0, 3, 3, 3, 0, 0],
-                           [0, 0, 3, 0, 0, 3, 0, 3, 0, 0],
-                           [0, 0, 3, 0, 0, 3, 3, 3, 0, 0],
-                           [0, 0, 3, 0, 0, 3, 0, 3, 0, 0],
-                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                           [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
-                           [0, 0, 3, 0, 0, 0, 3, 0, 0, 0],
-                           [0, 0, 3, 0, 0, 0, 3, 3, 0, 0]]).T
-
-        # Posicao do objetivo
-        '''self.goal_x = randint(0, n_cols-1)
-        self.goal_y = randint(0, n_rows-1)
-
-        while self.grid[self.goal_x][self.goal_y] != 2:
-            if self.grid[self.goal_x][self.goal_y] == 0:
-                # Popula a posicao do objetivo com um objetivo
-                self.grid[self.goal_x][self.goal_y] = 2
-            else:
-                self.goal_x = randint(0, n_cols-1)
-                self.goal_y = randint(0, n_rows-1)'''
-
-        # Posicoes dos queijos
-        self.cheeses_x = []
-        self.cheeses_y = []
-
-        self.holes_x = []
-        self.holes_y = []
-
-        for i in range(len(self.grid)):
-            for j in range(len(self.grid[i])):
-                if self.grid[i][j] == 5:
-                    self.holes_x.append(i)
-                    self.holes_y.append(j)
-
-    def is_valid_position(self, x, y):
-        """Checa se a posicao atual esta populada com um obstaculo ou esta out of bounds"""
-        if (x > self.n_cols-1 or y > self.n_rows-1) or (x < 0 or y < 0):
-            return False
-
-        elif self.grid[x][y] == 3:
-            return False
-
-        return True
-
-    def update(self):
-        """Atualiza o grid com as mudancas de estado realizadas."""
-
-        for i in range(len(self.holes_x)):
-            if self.grid[self.holes_x[i]][self.holes_y[i]] != 1:
-                self.grid[self.holes_x[i]][self.holes_y[i]] = 5
-
-        # Checa se o jogador ou agente chegaram no objetivo
-        if self.grid[self.player.x][self.player.y] == 2:
-            self.player.score += self.player.reward_amount
-            self.done = True
-
-        # Checa se o jogador ou agente comeram o queijo
-        elif self.grid[self.player.x][self.player.y] == 4:
-            #self.player.score += 1
-            self.clear_position(self.player.x, self.player.y)
-
-        elif self.grid[self.player.x][self.player.y] == 5 and self.trap_hole == True:
-            self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
-
-        # Popule a atual posicao do jogador com 1 e a do agente com 10
-        if self.player.name == "Player":
-            self.grid[self.player.x][self.player.y] = 1
-        elif self.player.name == "Agent":
-            self.grid[self.player.x][self.player.y] = 10
-
-    def clear_position(self, x, y):
-        self.grid[x][y] = 0
-
-    def clear_player_position(self):
-        self.grid[self.player.x][self.player.y] = 0
-
-    def populate_lists(self):
-        self.cheeses_x = []
-        self.cheeses_y = []
-
-        self.holes_x = []
-        self.holes_y = []
-
-        for i in range(len(self.grid)):
-            for j in range(len(self.grid[i])):
-                if self.grid[i][j] == 5:
-                    self.holes_x.append(i)
-                    self.holes_y.append(j)
-                elif self.grid[i][j] == 4:
-                    self.cheeses_x.append(i)
-                    self.cheeses_y.append(j)
-
 
 if __name__ == "__main__":
 

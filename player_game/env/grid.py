@@ -26,13 +26,15 @@ class Grid:
 
     """
 
-    def __init__(self, player, n_rows=10, n_cols=10, screen_width=1000, screen_height=500):
+    def __init__(self, player, n_rows=10, n_cols=10, screen_width=1000, screen_height=500, grid = []):
 
         self.player = player
 
         # Dimensoes do grid
         self.n_cols = n_cols
         self.n_rows = n_rows
+
+        self.trap_hole = True
 
         # Dimensoes da tela, importante para renderizar o grid.
         self.screen_width = screen_width
@@ -82,11 +84,9 @@ class Grid:
                            [3, 0, 3, 4, 4, 0, 0, 0, 3, 0],
                            [3, 3, 0, 3, 3, 0, 3, 0, 3, 0],
                            [3, 0, 0, 0, 0, 0, 3, 0, 4, 0],
-                           [3, 3, 3, 3, 4, 0, 3, 3, 0, 3]]).T,]
-
-        #self.grid = self.maps[randint(0, 3)]
-
-        self.grid = array([[0, 3, 3, 4, 3, 0, 0, 0, 0, 3],
+                           [3, 3, 3, 3, 4, 0, 3, 3, 0, 3]]).T,
+                           
+                    array([[0, 3, 3, 4, 3, 0, 0, 0, 0, 3],
                            [0, 3, 3, 0, 3, 0, 3, 3, 0, 0],
                            [0, 0, 0, 0, 3, 3, 0, 0, 3, 0],
                            [0, 3, 3, 3, 3, 4, 3, 0, 0, 0],
@@ -95,23 +95,19 @@ class Grid:
                            [0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
                            [0, 3, 0, 3, 0, 3, 3, 0, 3, 0],
                            [0, 3, 3, 0, 0, 3, 3, 0, 0, 3],
-                           [0, 0, 4, 3, 0, 0, 4, 3, 0, 4]]).T
+                           [0, 0, 4, 3, 0, 0, 4, 3, 0, 4]]).T]
 
+        #self.grid = self.maps[randint(0, 4)]
 
-        # Posicao do objetivo
-        self.goal_x = 5 #randint(0, n_cols-1)
-        self.goal_y = 0 #randint(0, n_rows-1)
+        self.cheeses_x = []
+        self.cheeses_y = []
 
-        while self.grid[self.goal_x][self.goal_y] != 2:
-            if self.grid[self.goal_x][self.goal_y] == 0:
-                # Popula a posicao do objetivo com um objetivo
-                self.grid[self.goal_x][self.goal_y] = 2
-            else:
-                self.goal_x = randint(0, n_cols-1)
-                self.goal_y = randint(0, n_rows-1)
+        self.holes_x = []
+        self.holes_y = []
 
-        self.cheeses_x = [0,4,5,7,3]
-        self.cheeses_y = [9,4,4,9,9]
+        self.grid = grid
+
+        self.populate_lists()
 
         '''for i in range(5):
             cheese_x = randint(0, n_cols-1)
@@ -153,7 +149,11 @@ class Grid:
 
     def update(self):
         """Atualiza o grid com as mudancas de estado realizadas."""
-        self.player.eaten_cheese = False
+
+        for i in range(len(self.holes_x)):
+            if self.grid[self.holes_x[i]][self.holes_y[i]] != 1:
+                self.grid[self.holes_x[i]][self.holes_y[i]] = 5
+
         # Checa se o jogador ou agente chegaram no objetivo
         if self.grid[self.player.x][self.player.y] == 2:
             self.player.score += self.player.reward_amount
@@ -161,18 +161,31 @@ class Grid:
 
         # Checa se o jogador ou agente comeram o queijo
         elif self.grid[self.player.x][self.player.y] == 4:
-            self.player.score += 0.2
-            self.player.eaten_cheese = True
+            #self.player.score += 1
             self.clear_position(self.player.x, self.player.y)
+
+        elif self.grid[self.player.x][self.player.y] == 5 and self.trap_hole == True:
+            self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
 
         # Popule a atual posicao do jogador com 1 e a do agente com 10
         if self.player.name == "Player":
             self.grid[self.player.x][self.player.y] = 1
         elif self.player.name == "Agent":
-            self.grid[self.player.x][self.player.y] = 10
+            self.grid[self.player.x][self.player.y] = 1
 
     def clear_position(self, x, y):
         self.grid[x][y] = 0
 
     def clear_player_position(self):
         self.grid[self.player.x][self.player.y] = 0
+
+    def populate_lists(self):
+
+        for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                if self.grid[i][j] == 5:
+                    self.holes_x.append(i)
+                    self.holes_y.append(j)
+                elif self.grid[i][j] == 4:
+                    self.cheeses_x.append(i)
+                    self.cheeses_y.append(j)

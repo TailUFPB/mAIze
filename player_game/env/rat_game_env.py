@@ -13,8 +13,8 @@ import pickle
 import time
 import plot
 
-pygame.init()
-font = pygame.font.SysFont("arial", 25)
+#pygame.init()
+#font = pygame.font.SysFont("arial", 25)
 
 rat_up = load_image("spr_rat_up.png")
 rat_down = load_image("spr_rat_down.png")
@@ -32,14 +32,15 @@ goal_img = load_image("spr_floor_goal.png", res=(50, 50))
 cheese_img = load_image("spr_cheese.png", res=(50, 50))
 
 
-class Rat_Game(gym.Env):
-    def __init__(self):
+class Rat_Game_Gym(gym.Env):
+    def __init__(self,grid,screen):
         self.iteration = -1
         self.curr_step = -1
+        self.grid = grid
         self._reset()
-        self.screen = pygame.display.set_mode((500, 500))
-        pygame.display.set_caption("Rar_Game_Env")
-        self.clock = pygame.time.Clock()
+        #self.screen = screen
+        #pygame.display.set_caption("Rar_Game_Env")
+        #self.clock = pygame.time.Clock()
 
     def step(self, action):
 
@@ -53,7 +54,7 @@ class Rat_Game(gym.Env):
 
     def _reset(self):
         self.agent = Player(0, 0, "Agent")
-        self.maze = Grid(self.agent, n_cols=10, n_rows=10)
+        self.maze = Grid(self.agent, n_cols=10, n_rows=10, grid=self.grid)
 
         self.number_cheese = 5
         self.iteration += 1
@@ -61,40 +62,35 @@ class Rat_Game(gym.Env):
 
         return self._get_state()
 
-    def _render(self, mode="human", close=False):
-        rect_width = 500 // 10
-        rect_height = 500 // 10
+    
+    def _render(self, screen):
 
-        for x in range(0, 10):
-            for y in range(0, 10):
+        for x in range(0, self.grid_ai.n_cols):
+            for y in range(0, self.grid_ai.n_rows):
                 # Posicao
                 rect = pygame.Rect(
-                    x * rect_width, y * rect_height, rect_width, rect_height
+                    x * self.rect_width,  y * self.rect_height, self.rect_width, self.rect_height
                 )
 
                 # Chao
-                self.screen.blit(floor_img, rect)
+                screen.blit(floor_img, rect)
 
-                # Objetivo
-                if self.maze.grid[x][y] == 2:
-                    self.screen.blit(goal_img, rect)
-
-                # Parede
-                elif self.maze.grid[x][y] == 3:
-                    self.screen.blit(wall_img, rect)
-                # Queijo
-                elif self.maze.grid[x][y] == 4:
-                    self.screen.blit(cheese_img, rect)
-
-                if self.maze.grid[x][y] == 10:
+                # Agente
+                if self.grid_ai.grid[x][y] == 1:
                     if self.agent.direction == "Up":
-                        self.screen.blit(human_rat_up, rect)
+                        screen.blit(rat_up, ((x*self.rect_width) - 32 + self.rect_width //
+                                                2, (y*self.rect_height)-32+self.rect_height//2))
                     elif self.agent.direction == "Down":
-                        self.screen.blit(human_rat_down, rect)
+                        screen.blit(rat_down, ((x*self.rect_width) - 32 + self.rect_width //
+                                                2, (y*self.rect_height)-32+self.rect_height//2))
                     elif self.agent.direction == "Right":
-                        self.screen.blit(human_rat_right, rect)
+                        screen.blit(rat_right, ((x*self.rect_width) - 32 + self.rect_width //
+                                                2, (y*self.rect_height)-32+self.rect_height//2))
                     else:
-                        self.screen.blit(human_rat_left, rect)
+                        screen.blit(rat_left, ((x*self.rect_width) - 32 + self.rect_width //
+                                                2, (y*self.rect_height)-32+self.rect_height//2))
+
+                self.object_draw(self.grid_ai.grid[x][y], self.grid_ai.trap_hole, rect)
 
         self.clock.tick(1000)
         pygame.display.update()
@@ -163,8 +159,8 @@ DISCOUNT = 0.99
 
 
 class Maze_agent:
-    def __init__(self):
-        self.env = Rat_Game()
+    def __init__(self, maze, screen):
+        self.env = Rat_Game_Gym(maze, screen)
         self.maze_size = tuple([10, 10])
         self.state_bounds = list(zip([0, 0], [10, 10]))
         self.number_actions = 4
@@ -216,7 +212,9 @@ class Maze_agent:
 
     def train(self):
         for episode in range(EPISODES):
+            print('comeco do for')
             current_state = self.env._reset()
+            print('depois do reset')
             current_state = self.discretize_state(current_state)
 
             done = False
@@ -224,10 +222,11 @@ class Maze_agent:
             rewards = 0
 
             moves = 0
+            print('antes do done')
 
             while not done:
 
-                if episode % RENDER_EPISODE == 0 and episode > 1:
+                if episode % RENDER_EPISODE == 0 or episode == 0:
                     self.save_model("player_game/env/model/model.pickle")
                     self.env._render()
                     time.sleep(0.02)
