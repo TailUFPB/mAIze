@@ -6,11 +6,15 @@ class Player:
         self.x = x
         self.y = y
 
+        self.initial_x = x
+        self.initial_y = y
+
         self.direction = "Up"
 
         self.reward_amount = 20
 
         self.eaten_cheese = False
+        self.trapped = False
 
         self.score = 0
 

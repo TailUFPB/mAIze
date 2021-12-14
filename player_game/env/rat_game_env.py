@@ -56,7 +56,8 @@ class Rat_Game_Gym(gym.Env):
         self.agent = Player(0, 0, "Agent")
         self.maze = Grid(self.agent, n_cols=10, n_rows=10, grid=self.grid)
 
-        self.number_cheese = 5
+        self.number_cheese = len(self.maze.cheeses_x)
+        #print(self.number_cheese)
         self.iteration += 1
         self.curr_step = 0
 

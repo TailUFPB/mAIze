@@ -31,6 +31,9 @@ wall_img = load_image("spr_tile_middle.png", res=(50, 50))
 goal_img = load_image("spr_floor_goal.png", res=(50, 50))
 cheese_img = load_image("spr_cheese.png", res=(50, 50))
 
+trap_closed_img = load_image("spr_floor_trap.png", res=(50,50))
+trap_open_img = load_image("spr_floor_trap_open.png", res=(50,50))
+
 
 class Rat_Game(gym.Env):
     def __init__(self):
@@ -52,10 +55,12 @@ class Rat_Game(gym.Env):
         return ob, reward, self.maze.done
 
     def _reset(self):
-        self.agent = Player(0, 0, "Agent")
-        self.maze = Grid(self.agent, n_cols=10, n_rows=10)
+        #self.agent = Player(0, 0, "Agent")
+        self.maze = Grid(n_cols=10, n_rows=10)
+        self.agent = self.maze.player
 
-        self.number_cheese = 5
+        self.number_cheese = len(self.maze.cheeses_x)
+        #print(self.number_cheese)
         self.iteration += 1
         self.curr_step = 0
 
@@ -86,7 +91,13 @@ class Rat_Game(gym.Env):
                 elif self.maze.grid[x][y] == 4:
                     self.screen.blit(cheese_img, rect)
 
-                if self.maze.grid[x][y] == 10:
+                elif self.maze.grid[x][y] == 5:
+                    if self.maze.trap_hole:
+                        self.screen.blit(trap_open_img, rect)
+                    else:
+                        self.screen.blit(trap_closed_img, rect)
+
+                if self.maze.grid[x][y] == 1:
                     if self.agent.direction == "Up":
                         self.screen.blit(human_rat_up, rect)
                     elif self.agent.direction == "Down":
@@ -118,7 +129,10 @@ class Rat_Game(gym.Env):
             current_y -= 1
 
         if self.maze.is_valid_position(current_x, current_y):
-            state.append(self.maze.grid[current_x][current_y])
+            if self.maze.grid[current_x][current_y] == 5 and self.maze.trap_hole == True:
+                state.append(0)
+            else:
+                state.append(self.maze.grid[current_x][current_y])
         else:
             state.append(3)
 
@@ -140,7 +154,10 @@ class Rat_Game(gym.Env):
 
         elif self.agent.eaten_cheese:
             reward += 1
-            self.number_cheese -= 1
+            self.number_cheese = max(0, self.number_cheese - 1)
+
+        elif self.agent.trapped:
+            reward -= 1
 
         return reward
 
@@ -159,10 +176,13 @@ class Maze_agent:
         self.maze_size = tuple([10, 10])
         self.state_bounds = list(zip([0, 0], [10, 10]))
         self.number_actions = 4
-        self.number_blocks = 5
+        self.number_blocks = 6
+        self.vision = (
+            self.number_blocks,
+        )
 
         self.Q = np.zeros(
-            self.maze_size + (5,) + (6,) + (self.number_actions,), dtype=float
+            self.maze_size + self.vision + (6,) + (self.number_actions,), dtype=float
         )
 
         self.epsilon = 1
@@ -220,10 +240,21 @@ class Maze_agent:
 
             while not done:
 
-                if episode % RENDER_EPISODE == 0 and episode > 1:
-                    self.save_model("player_game/env/model/modelTraining.pickle")
+                for event in pygame.event.get():
+
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+
+                if episode == 1400:
                     self.env._render()
-                    time.sleep(0.02)
+                    time.sleep(0.07)
+                #if episode % RENDER_EPISODE == 0 and episode > 1:
+                    #self.save_model("player_game/env/model/modelTraining.pickle")
+                #    self.env._render()
+                #    time.sleep(0.006)
+                    # if moves > 300:
+                    #     done = True
 
                 action = self.decide_action(current_state)
 
@@ -237,9 +268,15 @@ class Maze_agent:
 
                 moves += 1
 
+                # if moves > 2000:
+                #     done = True
+
+            if episode == 1400:
+                self.save_model("player_game/env/model/modelTraining.pickle")
+                break
             if episode >= 300:
-                self.epsilon = self.update_epsilon(episode)
-                self.learning_rate = self.update_learning_rate(episode)
+                self.epsilon = self.update_epsilon(episode - 300)
+                self.learning_rate = self.update_learning_rate(episode - 300)
 
             self.all_rewards.append(rewards)
 

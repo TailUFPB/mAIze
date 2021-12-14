@@ -87,7 +87,7 @@ class Rat_Game_Gym(gym.Env):
         self.agent = Player(self.initial_x, self.initial_y, "Agent")
         self.maze = Grid(self.agent, n_cols=10, n_rows=10, grid=self.grid)
 
-        self.number_cheese = 5
+        self.number_cheese = len(self.maze.cheeses_x)
         self.iteration += 1
         self.curr_step = 0
 
@@ -194,7 +194,7 @@ class Rat_Game_Gym(gym.Env):
 
         elif self.agent.eaten_cheese:
             reward += 1
-            self.number_cheese -= 1
+            self.number_cheese = max(0, self.number_cheese - 1)
 
         return reward
 
@@ -213,7 +213,7 @@ class Maze_agent:
         self.number_actions = 4
         self.number_blocks = 5
 
-        self.Q = self.load_model("player_game/env/model/model.pickle")
+        self.Q = self.load_model("player_game/env/model/modelTraining.pickle")
 
         self.epsilon = 1
         self.learning_rate = 1
@@ -261,9 +261,9 @@ class Maze_agent:
         
         for episode in range(EPISODES):
             
-            print('comeco do for')
+            #print('comeco do for')
             current_state = self.env._reset()
-            print('depois do reset')
+            #print('depois do reset')
             current_state = self.discretize_state(current_state)
 
             done = False
@@ -271,14 +271,20 @@ class Maze_agent:
             rewards = 0
 
             moves = 0
-            print('antes do done')
+            #print('antes do done')
 
             while not done:
 
+                for event in pygame.event.get():
+
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+
                 if episode % RENDER_EPISODE == 0 or episode == 0:
-                    self.save_model("player_game/env/model/model.pickle")
+                   # self.save_model("player_game/env/model/model.pickle")
                     self.env._render(self.env.screen)
-                    time.sleep(0.2)
+                    time.sleep(0.02)
 
                 action = self.decide_action(current_state)
 

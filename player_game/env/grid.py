@@ -1,5 +1,6 @@
 from numpy import array
 from random import randint, random
+from player import Player
 
 class Grid:
 
@@ -28,9 +29,9 @@ class Grid:
 
     def __init__(self, player, n_rows=10, n_cols=10, screen_width=1000, screen_height=500, grid = []):
 
-        self.player = player
 
         # Dimensoes do grid
+        self.player = player
         self.n_cols = n_cols
         self.n_rows = n_rows
 
@@ -42,7 +43,7 @@ class Grid:
 
         self.done = False   # Variavel que determina se o jogo acabou
 
-        self.maps = [array([[0, 0, 0, 0, 3, 0, 4, 0, 0, 0],
+        self.maps = [array([[1, 0, 0, 0, 3, 0, 4, 0, 0, 0],
                            [3, 3, 3, 0, 3, 0, 3, 3, 3, 4],
                            [0, 0, 0, 0, 3, 0, 3, 0, 3, 0],
                            [3, 3, 3, 0, 0, 0, 0, 0, 3, 0],
@@ -51,9 +52,9 @@ class Grid:
                            [0, 3, 0, 0, 0, 0, 0, 0, 3, 0],
                            [3, 3, 0, 3, 3, 0, 3, 0, 3, 0],
                            [0, 3, 0, 0, 0, 0, 3, 0, 4, 0],
-                           [0, 3, 3, 0, 0, 0, 3, 0, 0, 3]]).T,
+                           [0, 3, 3, 0, 0, 0, 3, 0, 0, 2]]).T,
 
-                    array([[0, 0, 0, 0, 3, 0, 0, 0, 0, 0],
+                    array([[1, 0, 0, 0, 3, 0, 0, 0, 0, 0],
                            [3, 3, 3, 0, 3, 3, 3, 3, 3, 0],
                            [0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
                            [0, 3, 0, 3, 3, 0, 3, 0, 0, 0],
@@ -62,9 +63,9 @@ class Grid:
                            [0, 3, 3, 4, 4, 0, 0, 0, 3, 0],
                            [0, 0, 0, 3, 3, 0, 3, 0, 3, 0],
                            [0, 3, 0, 0, 0, 0, 3, 0, 4, 0],
-                           [4, 3, 3, 0, 4, 0, 3, 0, 0, 3]]).T,
+                           [4, 3, 3, 0, 4, 0, 3, 0, 0, 2]]).T,
 
-                    array([[0, 0, 0, 0, 3, 0, 0, 0, 4, 0],
+                    array([[1, 0, 0, 0, 3, 0, 0, 0, 4, 0],
                            [3, 3, 0, 0, 3, 0, 3, 3, 4, 0],
                            [0, 0, 0, 4, 3, 0, 3, 3, 3, 0],
                            [0, 3, 0, 3, 3, 0, 3, 0, 4, 0],
@@ -73,9 +74,9 @@ class Grid:
                            [0, 3, 3, 4, 0, 0, 0, 0, 3, 0],
                            [0, 0, 0, 3, 3, 0, 3, 0, 3, 0],
                            [3, 3, 0, 0, 0, 0, 3, 0, 0, 0],
-                           [3, 3, 3, 0, 0, 0, 0, 0, 0, 3]]).T,
+                           [3, 3, 3, 0, 0, 0, 0, 0, 0, 2]]).T,
                            
-                    array([[3, 0, 0, 0, 3, 0, 0, 0, 0, 0],
+                    array([[1, 0, 0, 0, 3, 0, 0, 0, 0, 0],
                            [3, 3, 0, 0, 3, 3, 3, 0, 3, 0],
                            [3, 3, 3, 0, 0, 0, 0, 0, 3, 0],
                            [3, 0, 0, 3, 3, 0, 3, 0, 0, 0],
@@ -84,9 +85,9 @@ class Grid:
                            [3, 0, 3, 4, 4, 0, 0, 0, 3, 0],
                            [3, 3, 0, 3, 3, 0, 3, 0, 3, 0],
                            [3, 0, 0, 0, 0, 0, 3, 0, 4, 0],
-                           [3, 3, 3, 3, 4, 0, 3, 3, 0, 3]]).T,
+                           [3, 3, 3, 3, 4, 0, 3, 3, 0, 2]]).T,
                            
-                    array([[0, 3, 3, 4, 3, 0, 0, 0, 0, 3],
+                    array([[1, 3, 3, 4, 3, 0, 0, 0, 0, 3],
                            [0, 3, 3, 0, 3, 0, 3, 3, 0, 0],
                            [0, 0, 0, 0, 3, 3, 0, 0, 3, 0],
                            [0, 3, 3, 3, 3, 4, 3, 0, 0, 0],
@@ -95,9 +96,31 @@ class Grid:
                            [0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
                            [0, 3, 0, 3, 0, 3, 3, 0, 3, 0],
                            [0, 3, 3, 0, 0, 3, 3, 0, 0, 3],
-                           [0, 0, 4, 3, 0, 0, 4, 3, 0, 4]]).T]
+                           [0, 0, 4, 3, 0, 0, 4, 3, 0, 2]]).T,
+                           
+                    array([[1, 3, 3, 0, 0, 0, 0, 0, 0, 3],
+                            [0, 3, 0, 3, 3, 0, 3, 0, 3, 0],
+                            [0, 0, 0, 3, 0, 0, 3, 0, 3, 0],
+                            [0, 3, 0, 3, 0, 3, 3, 0, 3, 0],
+                            [0, 3, 3, 0, 0, 0, 3, 3, 0, 4],
+                            [0, 3, 0, 0, 3, 0, 0, 0, 0, 0],
+                            [0, 3, 3, 4, 0, 3, 0, 0, 3, 0],
+                            [0, 4, 0, 3, 3, 0, 3, 0, 3, 0],
+                            [3, 3, 0, 3, 0, 0, 3, 0, 0, 0],
+                            [4, 0, 0, 0, 0, 0, 0, 0, 4, 2]]).T]
 
-        #self.grid = self.maps[randint(0, 4)]
+        #self.grid = self.maps[randint(0, 5)]
+
+        #flag = 0
+
+        '''for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                if self.grid[i][j] == 1:
+                    self.player = Player(i,j,'Agent')
+                    flag = 1
+                    break
+            if flag:
+                break'''
 
         self.cheeses_x = []
         self.cheeses_y = []
@@ -150,6 +173,10 @@ class Grid:
     def update(self):
         """Atualiza o grid com as mudancas de estado realizadas."""
 
+        self.player.eaten_cheese = False
+        self.trapped = False
+        self.trap_hole = not self.trap_hole
+
         for i in range(len(self.holes_x)):
             if self.grid[self.holes_x[i]][self.holes_y[i]] != 1:
                 self.grid[self.holes_x[i]][self.holes_y[i]] = 5
@@ -162,10 +189,13 @@ class Grid:
         # Checa se o jogador ou agente comeram o queijo
         elif self.grid[self.player.x][self.player.y] == 4:
             #self.player.score += 1
+            self.player.eaten_cheese = True
             self.clear_position(self.player.x, self.player.y)
 
         elif self.grid[self.player.x][self.player.y] == 5 and self.trap_hole == True:
-            self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
+            #self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
+            self.trapped = True
+
 
         # Popule a atual posicao do jogador com 1 e a do agente com 10
         if self.player.name == "Player":
