@@ -295,7 +295,7 @@ class Maze_agent:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:
                             if self.variance <= 0.1:
-                                self.save_model("player_game/env/model/model3.pickle")
+                                self.save_model("player_game/env/model/model4.pickle")
                             return 0
                         if event.key == pygame.K_SPACE:
                             watch = False
