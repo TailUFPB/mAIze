@@ -1,4 +1,5 @@
 import pygame
+from statistics import pvariance
 from player import Player
 from grid import Grid
 from pygame.locals import *
@@ -48,7 +49,7 @@ human_rat_right = load_image("spr_human_rat_right.png", res=(64, 64))
 RAT_IMG = load_image('spr_rat_up.png')
 
 EPISODES = 10000
-RENDER_EPISODE = 200
+RENDER_EPISODE = 50
 EPSILON_MINIMUM = 0.001
 DECAY = np.prod((10, 10), dtype=float) / 20 #Decay era / 2
 LEARNING_RATE_MINIMUM = 0.2
@@ -85,9 +86,14 @@ class Rat_Game_Gym(gym.Env):
 
     def _reset(self):
         self.agent = Player(self.initial_x, self.initial_y, "Agent")
-        self.maze = Grid(self.agent, n_cols=10, n_rows=10, grid=self.grid)
+        grid = []
+        for x in range(10):
+            grid.append([])
+            for y in range(10):
+                grid[x].append(self.grid[x][y])
+        self.maze = Grid(self.agent, n_cols=10, n_rows=10, grid=grid)
 
-        self.number_cheese = len(self.maze.cheeses_x)
+        self.number_cheese = min(len(self.maze.cheeses_x), 5)
         self.iteration += 1
         self.curr_step = 0
 
@@ -106,11 +112,11 @@ class Rat_Game_Gym(gym.Env):
             self.screen.blit(cheese_img, rect)
 
         # Armadilha 1
-        elif pos == 5:
+        '''elif pos == 5:
             if trap_hole:
                 self.screen.blit(trap_open_img, rect)
             else:
-                self.screen.blit(trap_closed_img, rect)
+                self.screen.blit(trap_closed_img, rect)'''
 
     def _render(self, screen):
 
@@ -157,7 +163,7 @@ class Rat_Game_Gym(gym.Env):
 
         current_x = self.agent.x
         current_y = self.agent.y
-        current_cheese = self.number_cheese
+        current_cheese = max(self.number_cheese, 0)
         state.append(current_x)
         state.append(current_y)
 
@@ -194,7 +200,7 @@ class Rat_Game_Gym(gym.Env):
 
         elif self.agent.eaten_cheese:
             reward += 1
-            self.number_cheese = max(0, self.number_cheese - 1)
+            self.number_cheese -= 1
 
         return reward
 
@@ -222,6 +228,7 @@ class Maze_agent:
         self.discount = DISCOUNT
         self.all_rewards = []
         self.mean_rewards = []
+        self.variance = 10000
 
     def discretize_state(self, state) -> tuple:
         return tuple(state)
@@ -260,6 +267,8 @@ class Maze_agent:
     def train(self):
         
         for episode in range(EPISODES):
+
+            watch = True
             
             #print('comeco do for')
             current_state = self.env._reset()
@@ -280,11 +289,18 @@ class Maze_agent:
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:
+                            if self.variance <= 0.1:
+                                self.save_model("player_game/env/model/modelTraining.pickle")
+                            return 0
+                        if event.key == pygame.K_SPACE:
+                            watch = False
 
-                if episode % RENDER_EPISODE == 0 or episode == 0:
-                   # self.save_model("player_game/env/model/model.pickle")
+                if episode % RENDER_EPISODE == 0 and episode != 0 and watch == True:
+                    #self.save_model("player_game/env/model/modelTraining.pickle")
                     self.env._render(self.env.screen)
-                    time.sleep(0.02)
+                    time.sleep(0.1)
 
                 action = self.decide_action(current_state)
 
@@ -313,6 +329,9 @@ class Maze_agent:
                 mean_reward = sum(self.all_rewards) / (episode + 1)
 
             self.mean_rewards.append(mean_reward)
+
+            self.variance = pvariance(self.all_rewards[-50:])
+            
             plot.plot(self.all_rewards, self.mean_rewards, self.epsilon)
 
         self.env.close()
@@ -540,10 +559,10 @@ class Rat_Game:
 
                             maze[mouse_x][mouse_y] = 0
 
-                        if event.key == K_t and mouse_pos[0] < self.width//2:
+                        '''if event.key == K_t and mouse_pos[0] < self.width//2:
                             maze[mouse_x][mouse_y] = 5
                             self.grid_ai.holes_x.append(mouse_x)
-                            self.grid_ai.holes_y.append(mouse_y)
+                            self.grid_ai.holes_y.append(mouse_y)'''
 
                     if pygame.mouse.get_pressed()[0] and mouse_pos[0] < self.width//2:
                         maze[mouse_x][mouse_y] = 3
@@ -571,8 +590,8 @@ class Rat_Game:
                         elif maze[x][y] == 4:
                             self.screen.blit(cheese_img, rect)
 
-                        elif maze[x][y] == 5:
-                            self.screen.blit(trap_closed_img, rect)
+                        '''elif maze[x][y] == 5:
+                            self.screen.blit(trap_closed_img, rect)'''
 
                 draw_text("Right Mouse to place Cheese", font,
                         (0, 0, 0), self.screen, 550, 50)
@@ -580,11 +599,11 @@ class Rat_Game:
                         (0, 0, 0), self.screen, 550, 150)
                 draw_text("R to place Ratatail", font,
                         (0, 0, 0), self.screen, 550, 250)
-                draw_text("Delete to remove cell content", font,
+                draw_text("F to place Exit", font,
                         (0, 0, 0), self.screen, 550, 350)
-                draw_text("Enter to make Ratatail play the game",
+                draw_text("Delete to remove cell content",
                         font, (0, 0, 0), self.screen, 550, 450)
-                draw_text("Esc to save maze and quit", font,
+                draw_text("Enter to make Ratatail play the game", font,
                         (0, 0, 0), self.screen, 550, 550)
 
                 pygame.display.update()

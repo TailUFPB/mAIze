@@ -109,11 +109,11 @@ class Grid:
                             [3, 3, 0, 3, 0, 0, 3, 0, 0, 0],
                             [4, 0, 0, 0, 0, 0, 0, 0, 4, 2]]).T]
 
-        #self.grid = self.maps[randint(0, 5)]
+        '''self.grid = self.maps[randint(0, 5)]
 
-        #flag = 0
+        flag = 0
 
-        '''for i in range(len(self.grid)):
+        for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
                 if self.grid[i][j] == 1:
                     self.player = Player(i,j,'Agent')

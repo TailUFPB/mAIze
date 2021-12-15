@@ -246,7 +246,7 @@ class Maze_agent:
                         pygame.quit()
                         quit()
 
-                if episode == 1400:
+                if episode == 2000:
                     self.env._render()
                     time.sleep(0.07)
                 #if episode % RENDER_EPISODE == 0 and episode > 1:

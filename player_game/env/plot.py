@@ -1,6 +1,9 @@
    
 import matplotlib.pyplot as plt
 from IPython import display
+#plt.use("Agg")
+#import matplotlib.backends.backend_agg as agg
+#import pylab
 import sys, os
 
 plt.ion()
