@@ -295,7 +295,7 @@ class Maze_agent:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:
                             if self.variance <= 0.1:
-                                self.save_model("player_game/env/model/model4.pickle")
+                                self.save_model("player_game/env/model/modelTraining.pickle")
                             return 0
                         if event.key == pygame.K_SPACE:
                             watch = False
@@ -471,7 +471,7 @@ class Rat_Game:
 
                 # Movimento do Agente
                 state = self.get_state()
-                if np.random.random() < 0.5:
+                if np.random.random() < 0:
                     agent_move = choice(["Up", "Down", "Left", "Right"])
                 else:
                     agent_move = ["Up", "Down", "Left", "Right"][int(np.argmax(game.Q[state]))]
