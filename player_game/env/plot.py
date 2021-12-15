@@ -1,36 +1,20 @@
    
 import matplotlib.pyplot as plt
 from IPython import display
-#plt.use("Agg")
-#import matplotlib.backends.backend_agg as agg
-#import pylab
 import sys, os
 
-plt.ion()
-
-# Disable
-def block_print():
-    sys.stdout = open(os.devnull, 'w')
-
-# Restore
-def enable_print():
-    sys.stdout = sys.__stdout__
-
-
 def plot(scores, mean_scores, epsilon):
-    block_print()
-    display.clear_output(wait=True)
-    display.display(plt.gcf())
+    my_dpi = 125
+    plt.figure(figsize=(500/my_dpi, 500/my_dpi), dpi=my_dpi)
     plt.clf()
     plt.title(f'Epsilon: {epsilon:.2f}')
     plt.xlabel("Number of Games")
     plt.ylabel("Score")
-    plt.plot(scores)
-    plt.plot(mean_scores)
+    plt.plot(scores, label = 'Current Score')
+    plt.plot(mean_scores, label = 'Mean Score (last 100)')
+    plt.legend(loc="lower right")
     plt.ylim(ymin=-6)
     plt.text(len(scores)-1, scores[-1], '{:.2f}'.format(scores[-1]))
     plt.text(len(mean_scores)-1, mean_scores[-1], '{:.2f}'.format(mean_scores[-1]))
-    plt.show(block=False)
     plt.grid(True)
-    plt.pause(.1)
-    enable_print()
+    plt.savefig("assets/plot.png", bbox_inches='tight', dpi = my_dpi)

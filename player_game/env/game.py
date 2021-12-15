@@ -99,7 +99,7 @@ class Rat_Game_Gym(gym.Env):
 
         return self._get_state()
 
-    def object_draw(self, pos, trap_hole, rect):
+    def object_draw(self, pos, rect):
         #Objetivo
         if pos == 2:
             self.screen.blit(goal_img, rect)
@@ -145,7 +145,7 @@ class Rat_Game_Gym(gym.Env):
                         screen.blit(rat_left, ((x*50) - 32 + 50 //
                                                 2, (y*50)-32+50//2))
 
-                self.object_draw(self.maze.grid[x][y], self.maze.trap_hole, rect)
+                self.object_draw(self.maze.grid[x][y], rect)
 
         self.clock.tick(1000)
         pygame.display.update()
@@ -333,6 +333,10 @@ class Maze_agent:
             self.variance = pvariance(self.all_rewards[-50:])
             
             plot.plot(self.all_rewards, self.mean_rewards, self.epsilon)
+            plot_img = load_image("plot.png", res=(500,500))
+            self.env.screen.blit(plot_img, pygame.Rect(500,  0, 500, 500))
+            pygame.display.update()
+
 
         self.env.close()
 
@@ -475,8 +479,8 @@ class Rat_Game:
                 # Movimento do Agente
                 agent_move = choice(["Up", "Down", "Left", "Right"])
 
-                self.grid_ai.trap_hole = not self.grid_ai.trap_hole
-                self.grid.trap_hole = not self.grid.trap_hole
+                '''self.grid_ai.trap_hole = not self.grid_ai.trap_hole
+                self.grid.trap_hole = not self.grid.trap_hole'''
 
                 # Movimento do Jogador
                 if event.key == K_DOWN:
@@ -682,7 +686,7 @@ class Rat_Game:
                         screen.blit(rat_left, ((x*self.rect_width) - 32 + self.rect_width //
                                                2, (y*self.rect_height)-32+self.rect_height//2))
 
-                self.object_draw(self.grid_ai.grid[x][y], self.grid_ai.trap_hole, rect)
+                self.object_draw(self.grid_ai.grid[x][y], rect)
 
         #pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(
         #    self.width//2 - 4, 0, 8, self.height))        
@@ -706,11 +710,11 @@ class Rat_Game:
 
             if rat.x > 0:
                 screen.blit(floor_img, rect_left)
-                self.object_draw(the_grid.grid[rat.x - 1][rat.y], the_grid.trap_hole, rect_left)
+                self.object_draw(the_grid.grid[rat.x - 1][rat.y], rect_left)
 
             if rat.x < 9:
                 screen.blit(floor_img, rect_right)
-                self.object_draw(the_grid.grid[rat.x + 1][rat.y], the_grid.trap_hole, rect_right)
+                self.object_draw(the_grid.grid[rat.x + 1][rat.y], rect_right)
 
             for i in range(4):
                 if not the_grid.is_valid_position((rat.x),(rat.y - i)):
@@ -726,7 +730,7 @@ class Rat_Game:
 
                 # Chao
                 screen.blit(floor_img, rect)
-                self.object_draw(the_grid.grid[rat.x][rat.y - i], the_grid.trap_hole, rect)
+                self.object_draw(the_grid.grid[rat.x][rat.y - i], rect)
 
             screen.blit(rat_vis_up, ((rat.x*self.rect_width + constant) - 30 + self.rect_width //
                                         2, (rat.y*self.rect_height)-32+self.rect_height//2))
@@ -741,11 +745,11 @@ class Rat_Game:
 
             if rat.x > 0:
                 screen.blit(floor_img, rect_left)
-                self.object_draw(the_grid.grid[rat.x - 1][rat.y], the_grid.trap_hole, rect_left)
+                self.object_draw(the_grid.grid[rat.x - 1][rat.y], rect_left)
 
             if rat.x < 9:
                 screen.blit(floor_img, rect_right)
-                self.object_draw(the_grid.grid[rat.x + 1][rat.y], the_grid.trap_hole, rect_right)
+                self.object_draw(the_grid.grid[rat.x + 1][rat.y], rect_right)
 
             for i in range(4):
 
@@ -761,7 +765,7 @@ class Rat_Game:
 
                 # Chao
                 screen.blit(floor_img, rect)
-                self.object_draw(the_grid.grid[rat.x][rat.y + i], the_grid.trap_hole, rect)
+                self.object_draw(the_grid.grid[rat.x][rat.y + i], rect)
 
             screen.blit(rat_vis_down, ((rat.x*self.rect_width + constant) - 30 + self.rect_width //
                                             2, (rat.y*self.rect_height)-32+self.rect_height//2))
@@ -776,11 +780,11 @@ class Rat_Game:
 
             if rat.y > 0:
                 screen.blit(floor_img, rect_up)
-                self.object_draw(the_grid.grid[rat.x][rat.y - 1], the_grid.trap_hole, rect_up)
+                self.object_draw(the_grid.grid[rat.x][rat.y - 1], rect_up)
 
             if rat.y < 9:
                 screen.blit(floor_img, rect_down)
-                self.object_draw(the_grid.grid[rat.x][rat.y + 1], the_grid.trap_hole, rect_down)
+                self.object_draw(the_grid.grid[rat.x][rat.y + 1], rect_down)
 
             for i in range(4):
 
@@ -797,7 +801,7 @@ class Rat_Game:
 
                 # Chao
                 screen.blit(floor_img, rect)
-                self.object_draw(the_grid.grid[rat.x + i][rat.y], the_grid.trap_hole, rect)
+                self.object_draw(the_grid.grid[rat.x + i][rat.y],  rect)
 
             screen.blit(rat_vis_right, ((rat.x*self.rect_width + constant) - 30 + self.rect_width //
                                             2, (rat.y*self.rect_height)-32+self.rect_height//2))
@@ -812,11 +816,11 @@ class Rat_Game:
 
             if rat.y > 0:
                 screen.blit(floor_img, rect_up)
-                self.object_draw(the_grid.grid[rat.x][rat.y - 1], the_grid.trap_hole, rect_up)
+                self.object_draw(the_grid.grid[rat.x][rat.y - 1], rect_up)
 
             if rat.y < 9:
                 screen.blit(floor_img, rect_down)
-                self.object_draw(the_grid.grid[rat.x][rat.y + 1], the_grid.trap_hole, rect_down)
+                self.object_draw(the_grid.grid[rat.x][rat.y + 1], rect_down)
             
             for i in range(4):
 
@@ -833,12 +837,12 @@ class Rat_Game:
 
                 # Chao
                 screen.blit(floor_img, rect)
-                self.object_draw(the_grid.grid[rat.x - i][rat.y], the_grid.trap_hole, rect)
+                self.object_draw(the_grid.grid[rat.x - i][rat.y], rect)
             
             screen.blit(rat_vis_left, ((rat.x*self.rect_width + constant) - 30 + self.rect_width //
                                             2, (rat.y*self.rect_height)-32+self.rect_height//2))
 
-    def object_draw(self, pos, trap_hole, rect):
+    def object_draw(self, pos, rect):
         #Objetivo
         if pos == 2:
             self.screen.blit(goal_img, rect)
@@ -851,11 +855,11 @@ class Rat_Game:
             self.screen.blit(cheese_img, rect)
 
         # Armadilha 1
-        elif pos == 5:
+        '''elif pos == 5:
             if trap_hole:
                 self.screen.blit(trap_open_img, rect)
             else:
-                self.screen.blit(trap_closed_img, rect)
+                self.screen.blit(trap_closed_img, rect)'''
 
 if __name__ == "__main__":
 

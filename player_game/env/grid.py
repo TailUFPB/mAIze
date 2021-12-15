@@ -35,7 +35,7 @@ class Grid:
         self.n_cols = n_cols
         self.n_rows = n_rows
 
-        self.trap_hole = True
+        #self.trap_hole = True
 
         # Dimensoes da tela, importante para renderizar o grid.
         self.screen_width = screen_width
@@ -174,8 +174,8 @@ class Grid:
         """Atualiza o grid com as mudancas de estado realizadas."""
 
         self.player.eaten_cheese = False
-        self.trapped = False
-        self.trap_hole = not self.trap_hole
+        #self.trapped = False
+        #self.trap_hole = not self.trap_hole
 
         for i in range(len(self.holes_x)):
             if self.grid[self.holes_x[i]][self.holes_y[i]] != 1:
@@ -192,9 +192,9 @@ class Grid:
             self.player.eaten_cheese = True
             self.clear_position(self.player.x, self.player.y)
 
-        elif self.grid[self.player.x][self.player.y] == 5 and self.trap_hole == True:
+        '''elif self.grid[self.player.x][self.player.y] == 5 and self.trap_hole == True:
             #self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
-            self.trapped = True
+            self.trapped = True'''
 
 
         # Popule a atual posicao do jogador com 1 e a do agente com 10
