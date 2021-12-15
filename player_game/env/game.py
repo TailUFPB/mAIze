@@ -15,6 +15,7 @@ import plot
 #from rat_game_env import Maze_agent
 import os
 
+
 pygame.init()
 font = pygame.font.SysFont('arial', 25)
 
@@ -35,16 +36,18 @@ def select_game_skin(skin):
         rat_left = load_image("spr_remy_left.png")
         rat_right = load_image("spr_remy_right.png")
     elif skin == 2:
-        rat_up = load_image("spr_cachorro_up.PNG")
+        rat_up = load_image("spr_cachorro_down.PNG")
         rat_down = load_image("spr_cachorro_down.PNG")
-        rat_left = load_image("spr_cachorro_left.PNG")
-        rat_right = load_image("spr_cachorro_right.PNG")
+        rat_left = load_image("spr_cachorro_down.PNG")
+        rat_right = load_image("spr_cachorro_down.PNG")
     return 0
 
 human_rat_up = load_image("spr_human_rat_up.png", res=(64, 64))
 human_rat_down = load_image("spr_human_rat_down.png", res=(64, 64))
 human_rat_left = load_image("spr_human_rat_left.png", res=(64, 64))
 human_rat_right = load_image("spr_human_rat_right.png", res=(64, 64))
+
+mm_inst = load_image("maze_maker_inst.png", res=(500, 500))
 
 RAT_IMG = load_image('spr_rat_up.png')
 
@@ -292,7 +295,7 @@ class Maze_agent:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:
                             if self.variance <= 0.1:
-                                self.save_model("player_game/env/model/modelTraining.pickle")
+                                self.save_model("player_game/env/model/model3.pickle")
                             return 0
                         if event.key == pygame.K_SPACE:
                             watch = False
@@ -359,6 +362,8 @@ class Rat_Game:
         pygame.display.set_caption("Rat")
         self.clock = pygame.time.Clock()
 
+        self.Q = 0
+
         self.start()  # inicializa o jogador e o grid
 
         # Dimensoes de cada celula do grid na tela
@@ -393,10 +398,6 @@ class Rat_Game:
 
         self.agent.x, self.agent.y = self.agent.initial_x, self.agent.initial_y
         self.player.x, self.player.y = self.player.initial_x, self.player.initial_y
-
-        for i in range(len(self.grid_ai.cheeses_x)):
-            self.grid_ai.grid[self.grid_ai.cheeses_x[i]][self.grid_ai.cheeses_y[i]] = 4
-            self.grid.grid[self.grid.cheeses_x[i]][self.grid.cheeses_y[i]] = 4
         
         return 0
 
@@ -409,7 +410,7 @@ class Rat_Game:
             self.screen.blit(RAT_IMG, (cursor_pos*107 + 40, 330))
             
             draw_text('SELECT LEVEL', MENU_FONT, (255,255,255), self.screen, 8000, 30)
-            draw_text('1  2  3  4  5  6  7  8  9', MENU_FONT, (255,255,255), self.screen, 8000, 250)
+            draw_text('1  2  3  4  5  6  7  8  9', SELECT_FONT, (255,255,255), self.screen, 8000, 250)
 
             pygame.display.update()
 
@@ -420,7 +421,8 @@ class Rat_Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         self.grid.grid, self.grid_ai.grid = get_grid(cursor_pos), get_grid(cursor_pos)
-                        self.player.x, self.player.y, self.agent.x, self.agent.x = get_pos(cursor_pos)
+                        self.player.x, self.player.y, self.agent.x, self.agent.y = get_pos(cursor_pos)
+                        self.player.initial_x, self.player.initial_y, self.agent.initial_x, self.agent.initial_y = get_pos(cursor_pos)
 
                         self.grid.populate_lists()
                         self.grid_ai.populate_lists()
@@ -459,15 +461,6 @@ class Rat_Game:
                 self.grid_ai.done = False
             else:
                 return 1
-
-        if self.grid_ai.done:
-                replay = self.win_screen(2)
-                
-                if replay:
-                    self.reset_mm()
-                    self.grid_ai.done = False
-                else:
-                    return 0
         
 
         for event in pygame.event.get():
@@ -477,10 +470,11 @@ class Rat_Game:
             if event.type == KEYDOWN:
 
                 # Movimento do Agente
-                agent_move = choice(["Up", "Down", "Left", "Right"])
-
-                '''self.grid_ai.trap_hole = not self.grid_ai.trap_hole
-                self.grid.trap_hole = not self.grid.trap_hole'''
+                state = self.get_state()
+                if np.random.random() < 0.5:
+                    agent_move = choice(["Up", "Down", "Left", "Right"])
+                else:
+                    agent_move = ["Up", "Down", "Left", "Right"][int(np.argmax(game.Q[state]))]
 
                 # Movimento do Jogador
                 if event.key == K_DOWN:
@@ -597,18 +591,7 @@ class Rat_Game:
                         '''elif maze[x][y] == 5:
                             self.screen.blit(trap_closed_img, rect)'''
 
-                draw_text("Right Mouse to place Cheese", font,
-                        (0, 0, 0), self.screen, 550, 50)
-                draw_text("Left Mouse to place Wall", font,
-                        (0, 0, 0), self.screen, 550, 150)
-                draw_text("R to place Ratatail", font,
-                        (0, 0, 0), self.screen, 550, 250)
-                draw_text("F to place Exit", font,
-                        (0, 0, 0), self.screen, 550, 350)
-                draw_text("Delete to remove cell content",
-                        font, (0, 0, 0), self.screen, 550, 450)
-                draw_text("Enter to make Ratatail play the game", font,
-                        (0, 0, 0), self.screen, 550, 550)
+                self.screen.blit(mm_inst, pygame.Rect(500, 0, 500, 500))
 
                 pygame.display.update()
 
@@ -616,6 +599,7 @@ class Rat_Game:
             self.grid_ai.populate_lists()
             
             agent = Maze_agent(maze, self.screen)
+            print(array(maze).T)
             agent.train()
 
 
@@ -860,6 +844,45 @@ class Rat_Game:
                 self.screen.blit(trap_open_img, rect)
             else:
                 self.screen.blit(trap_closed_img, rect)'''
+    
+    def load_model(self, path) -> pickle:
+        with open(path, "rb") as model:
+            return pickle.load(model)
+
+    def get_state(self):
+        # [0 , 0 , 0,  0]
+        # [0 , 3 , 0,  0]
+        # [0 , ^ , 0 , 0]
+        # [0 , 0 , 0,  0]
+
+        # (2, 1) -> (1,1) + (0,1) -> [0,0]
+
+        # Retornar linha reta
+        state = list()
+
+        current_x = self.agent.x
+        current_y = self.agent.y
+        current_cheese = 0
+        state.append(current_x)
+        state.append(current_y)
+
+        if self.agent.direction == "Up":
+            current_x -= 1
+        if self.agent.direction == "Down":
+            current_x += 1
+        if self.agent.direction == "Right":
+            current_y += 1
+        if self.agent.direction == "Left":
+            current_y -= 1
+
+        if self.grid_ai.is_valid_position(current_x, current_y):
+            state.append(self.grid_ai.grid[current_x][current_y])
+        else:
+            state.append(3)
+
+        state.append(current_cheese)
+
+        return tuple(state)
 
 if __name__ == "__main__":
 
@@ -876,5 +899,8 @@ if __name__ == "__main__":
             game.maze_maker()
         elif mode_selection == 1:  # Player vs AI
             level = game.level_select()
+
+            game.Q = game.load_model(f"player_game/env/model/model{level}.pickle")
+
             while finished == 0:
                 finished = game.game_step(level)
