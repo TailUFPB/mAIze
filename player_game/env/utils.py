@@ -50,6 +50,7 @@ def main_menu(surface, skin):
         surface.fill((0, 0, 0))
 
         draw_text("MAIZE", MENU_FONT, (255, 255, 255), surface, 8000, 50)
+        draw_text("AI", MENU_FONT, (2, 119, 189), surface, 405, 50)
         draw_text("PLAY GAME", OPTIONS_FONT, (255, 255, 255), surface, 8000, 250)
         draw_text("EXTRAS", OPTIONS_FONT, (255, 255, 255), surface, 8000, 350)
 
