@@ -52,7 +52,8 @@ def main_menu(surface, skin):
         draw_text("PLAY GAME", OPTIONS_FONT, (255, 255, 255), surface, 8000, 250)
         draw_text("EXTRAS", OPTIONS_FONT, (255, 255, 255), surface, 8000, 350)
 
-        surface.blit(RAT_IMAGE, (320, cursor_pos * 100 + 235))
+        cursor_x = 250 if cursor_pos == 0 else 310 
+        surface.blit(RAT_IMAGE, (cursor_x, cursor_pos * 100 + 235))
 
         pg.display.update()
 
