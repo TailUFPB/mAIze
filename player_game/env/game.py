@@ -222,7 +222,7 @@ class Maze_agent:
         self.number_actions = 4
         self.number_blocks = 5
 
-        self.Q = self.load_model("player_game/env/model/modelTraining.pickle")
+        self.Q = self.load_model("player_game/env/model/modelStandard.pickle")
 
         self.epsilon = 1
         self.learning_rate = 1
@@ -295,7 +295,8 @@ class Maze_agent:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:
                             if self.variance <= 0.1:
-                                self.save_model("player_game/env/model/modelTraining.pickle")
+                                pass
+                                #self.save_model("player_game/env/model/modelTraining.pickle")
                             return 0
                         if event.key == pygame.K_SPACE:
                             watch = False
