@@ -538,6 +538,9 @@ class Rat_Game:
                             enter_flag = 1
 
                         if event.key == K_r and rat_flag == 0 and mouse_pos[0] < self.width//2:
+                            if maze[mouse_x][mouse_y] == 2:
+                                finish_flag = 0
+                            
                             maze[mouse_x][mouse_y] = 1
                             self.agent.x = mouse_x
                             self.agent.y = mouse_y
@@ -546,6 +549,10 @@ class Rat_Game:
                             rat_flag = 1
 
                         if event.key == K_f and finish_flag == 0 and mouse_pos[0] < self.width//2:
+
+                            if maze[mouse_x][mouse_y] == 1:
+                                rat_flag = 0
+                            
                             maze[mouse_x][mouse_y] = 2
                             finish_flag = 1
 
@@ -566,9 +573,19 @@ class Rat_Game:
                             self.grid_ai.holes_y.append(mouse_y)'''
 
                     if pygame.mouse.get_pressed()[0] and mouse_pos[0] < self.width//2:
+                        if maze[mouse_x][mouse_y] == 1:
+                            rat_flag = 0
+                        elif maze[mouse_x][mouse_y] == 2:
+                            finish_flag = 0
+
                         maze[mouse_x][mouse_y] = 3
 
                     elif pygame.mouse.get_pressed()[2] and mouse_pos[0] < self.width//2:
+                        if maze[mouse_x][mouse_y] == 1:
+                            rat_flag = 0
+                        elif maze[mouse_x][mouse_y] == 2:
+                            finish_flag = 0
+
                         maze[mouse_x][mouse_y] = 4
 
                 for x in range(0, self.grid_ai.n_cols):

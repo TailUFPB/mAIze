@@ -1,10 +1,14 @@
    
 import matplotlib.pyplot as plt
+import matplotlib
 from IPython import display
 import sys, os
+from importlib import reload
 
 def plot(scores, mean_scores, epsilon):
     my_dpi = 125
+    reload(matplotlib)
+    matplotlib.use('Agg')
     plt.figure(figsize=(500/my_dpi, 500/my_dpi), dpi=my_dpi)
     plt.clf()
     plt.title(f'Epsilon: {epsilon:.2f}')
