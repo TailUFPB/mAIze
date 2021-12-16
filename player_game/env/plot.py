@@ -18,3 +18,4 @@ def plot(scores, mean_scores, epsilon):
     plt.text(len(mean_scores)-1, mean_scores[-1], '{:.2f}'.format(mean_scores[-1]))
     plt.grid(True)
     plt.savefig("assets/plot.png", bbox_inches='tight', dpi = my_dpi)
+    plt.close()

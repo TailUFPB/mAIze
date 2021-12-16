@@ -407,9 +407,9 @@ class Rat_Game:
         while True:
             self.screen.fill((0,0,0))
 
-            self.screen.blit(RAT_IMG, (cursor_pos*107 + 40, 330))
+            self.screen.blit(RAT_IMG, (cursor_pos*89 + 112, 325))
             
-            draw_text('SELECT LEVEL', MENU_FONT, (255,255,255), self.screen, 8000, 30)
+            draw_text('SELECT LEVEL', LEVEL_FONT, (255,255,255), self.screen, 8000, 50)
             draw_text('1  2  3  4  5  6  7  8  9', SELECT_FONT, (255,255,255), self.screen, 8000, 250)
 
             pygame.display.update()
@@ -432,6 +432,8 @@ class Rat_Game:
                         cursor_pos += 1
                     if event.key == pygame.K_LEFT and cursor_pos > 0:
                         cursor_pos -= 1
+                    if event.key == pygame.K_ESCAPE:
+                        return -1
 
     def game_step(self, level):
         if self.grid.done:
@@ -528,7 +530,7 @@ class Rat_Game:
 
                     if event.type == KEYDOWN:
                         if event.key == K_ESCAPE:
-                            self.save_maze(maze)
+                            #self.save_maze(maze)
                             return 0
 
                         if event.key == K_RETURN:
@@ -899,6 +901,9 @@ if __name__ == "__main__":
             game.maze_maker()
         elif mode_selection == 1:  # Player vs AI
             level = game.level_select()
+
+            if level == -1:
+                continue
 
             game.Q = game.load_model(f"player_game/env/model/model{level}.pickle")
 

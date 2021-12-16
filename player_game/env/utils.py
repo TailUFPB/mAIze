@@ -10,6 +10,7 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 500
 pg.init()
 MENU_FONT = pg.font.SysFont("arial", 140)
+LEVEL_FONT = pg.font.SysFont("arial", 120)
 OPTIONS_FONT = pg.font.SysFont("arial", 60)
 SKINS_FONT = pg.font.SysFont("arial", 40)
 SELECT_FONT = pg.font.SysFont("arial", 80)
@@ -83,11 +84,11 @@ def extras_menu(surface):
     while True:
         surface.fill((0, 0, 0))
 
-        draw_text("TUTORIAL", OPTIONS_FONT, (255, 255, 255), surface, 8000, 50)
-        draw_text("SKINS", OPTIONS_FONT, (255, 255, 255), surface, 8000, 8000)
-        draw_text("CREDITS", OPTIONS_FONT, (255, 255, 255), surface, 8000, 350)
+        draw_text("TUTORIAL", OPTIONS_FONT, (255, 255, 255), surface, 8000, 140)
+        draw_text("SKINS", OPTIONS_FONT, (255, 255, 255), surface, 8000, 220)
+        draw_text("CREDITS", OPTIONS_FONT, (255, 255, 255), surface, 8000, 300)
 
-        surface.blit(RAT_IMAGE, (320, cursor_pos * 100 + 135))
+        surface.blit(RAT_IMAGE, (292, cursor_pos * 80 + 140))
 
         pg.display.update()
 
@@ -102,21 +103,16 @@ def extras_menu(surface):
                     cursor_pos -= 1
                 if event.key == pg.K_RETURN:
                     if cursor_pos == 0:
-                        tutorial_menu(surface)
+                        cred_menu(surface, 0)
                     elif cursor_pos == 1:
                         return skins_menu(surface)
                     elif cursor_pos == 2:
-                        credits_menu(surface)
+                        cred_menu(surface, 1)
 
                 elif event.key == pg.K_ESCAPE:
                     return 0
 
     return 0
-
-
-def tutorial_menu(surface):
-    pass
-
 
 def skins_menu(surface):
     cursor_pos = 0
@@ -199,11 +195,14 @@ def skins_menu(surface):
     return 0
 
 
-def credits_menu(surface):
+def cred_menu(surface, flag):
 
     while True:
 
-        surface.blit(CREDITS, (0, 0))
+        if flag:
+            surface.blit(CREDITS, (0, 0))
+        else:
+            pass
 
         pg.display.update()
 
@@ -223,7 +222,7 @@ def mode_select(surface):
     while True:
         surface.fill((0, 0, 0))
 
-        surface.blit(RAT_IMAGE, (270, cursor_pos * 130 + 140))
+        surface.blit(RAT_IMAGE, (220, cursor_pos * 130 + 160))
 
         draw_text("Maze maker", SELECT_FONT, (255, 255, 255), surface, 8000, 150)
         draw_text("Player vs AI", SELECT_FONT, (255, 255, 255), surface, 8000, 280)
