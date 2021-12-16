@@ -1,0 +1,5 @@
+pygame
+gym
+matplotlib
+IPython
+numpy

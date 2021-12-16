@@ -23,6 +23,7 @@ def load_image(img_name, path=os.path.join(os.getcwd(), "assets"), res=None):
 
 
 RAT_IMAGE = load_image("spr_rat_right.png")
+CREDITS = load_image("credits.png")
 RAT_DOWN = load_image("spr_rat_down.png", res=(200, 200))
 RAT_MISTERY = load_image("spr_mistery_rat.png", res=(200, 200))
 REMY_DOWN = load_image("spr_remy_down.png", res=(200, 200))
@@ -201,9 +202,8 @@ def skins_menu(surface):
 def credits_menu(surface):
 
     while True:
-        surface.fill((0, 0, 0))
 
-        draw_text("Tail :D", MENU_FONT, (255, 255, 255), surface, 8000, 100)
+        surface.blit(CREDITS, (0, 0))
 
         pg.display.update()
 
