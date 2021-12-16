@@ -25,6 +25,7 @@ def load_image(img_name, path=os.path.join(os.getcwd(), "assets"), res=None):
 
 RAT_IMAGE = load_image("spr_rat_right.png")
 CREDITS = load_image("credits.png")
+TUTORIAL = load_image("tutorial.png")
 RAT_DOWN = load_image("spr_rat_down.png", res=(200, 200))
 RAT_MISTERY = load_image("spr_mistery_rat.png", res=(200, 200))
 REMY_DOWN = load_image("spr_remy_down.png", res=(200, 200))
@@ -203,7 +204,7 @@ def cred_menu(surface, flag):
         if flag:
             surface.blit(CREDITS, (0, 0))
         else:
-            pass
+            surface.blit(TUTORIAL, (0, 0))
 
         pg.display.update()
 

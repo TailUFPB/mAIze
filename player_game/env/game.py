@@ -628,15 +628,15 @@ class Rat_Game:
         while True:
             
             if select == 0: #Player won
-                draw_text('You won the game!', OPTIONS_FONT, (255,255,255), self.screen, 8000, 8000)
+                draw_text('You won the game!', SELECT_FONT, (255,255,255), self.screen, 8000, 180)
             elif select == 1: #AI won (Player vs IA)
-                draw_text('Ratatail won the game!', OPTIONS_FONT, (255,255,255), self.screen, 8000, 8000)
+                draw_text('Ratatail won the game!', SELECT_FONT, (255,255,255), self.screen, 8000, 180)
             elif select == 2: # AI won (Maze maker)
-                draw_text('Ratatail found the way out!', OPTIONS_FONT, (255,255,255), self.screen, 8000, 150)
-                draw_text('Press Space to edit the maze', OPTIONS_FONT, (255,255,255), self.screen, 8000, 280)
+                draw_text('Ratatail found the way out!', SELECT_FONT, (255,255,255), self.screen, 8000, 150)
+                draw_text('Press Space to edit the maze', SELECT_FONT, (255,255,255), self.screen, 8000, 280)
 
-            draw_text('Press Enter to play again', OPTIONS_FONT, (255,255,255), self.screen, 8000, 330)
-            draw_text('Press ESC to return to the Main Menu', OPTIONS_FONT, (255,255,255), self.screen, 8000, 380)
+            draw_text('Press Enter to play again', SKINS_FONT, (255,255,255), self.screen, 8000, 330)
+            draw_text('Press ESC to return to the Main Menu', SKINS_FONT, (255,255,255), self.screen, 8000, 380)
             
             pygame.display.update()
 
