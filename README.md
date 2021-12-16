@@ -10,7 +10,11 @@ How to play the game:
    ```sh
    pip install requirements.txt
    ```
-3. Run the game file
+3. Run the game file (Windows)
    ```sh
    python player_game\env\game.py
+   ```
+   (Linux)
+   ```sh
+   python player_game/env/game.py
    ```
