@@ -471,7 +471,7 @@ class Rat_Game:
 
                 # Movimento do Agente
                 state = self.get_state()
-                if np.random.random() < 0:
+                if np.random.random() < 0.4:
                     agent_move = choice(["Up", "Down", "Left", "Right"])
                 else:
                     agent_move = ["Up", "Down", "Left", "Right"][int(np.argmax(game.Q[state]))]
@@ -599,7 +599,7 @@ class Rat_Game:
             self.grid_ai.populate_lists()
             
             agent = Maze_agent(maze, self.screen)
-            print(array(maze).T)
+            #print(array(maze).T)
             agent.train()
 
 
